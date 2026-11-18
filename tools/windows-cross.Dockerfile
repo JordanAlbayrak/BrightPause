@@ -1,0 +1,7 @@
+FROM brightpause-linux
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nsis lld llvm clang \
+    && rm -rf /var/lib/apt/lists/*
+RUN rustup target add x86_64-pc-windows-msvc \
+    && cargo install --locked cargo-xwin tauri-cli
+WORKDIR /src

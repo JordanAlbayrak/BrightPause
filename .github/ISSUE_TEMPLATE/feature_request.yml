@@ -1,0 +1,22 @@
+name: Idea or feature request
+description: Suggest something new or a change
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would it help with?
+      description: The situation or problem, in your own words.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+  - type: checkboxes
+    id: fit
+    attributes:
+      label: Fits the app
+      options:
+        - label: It needs no network access, or only when I ask for it
+        - label: It adds nothing that runs between breaks

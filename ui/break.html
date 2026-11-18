@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BrightPause break</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="break">
+<canvas id="bg" aria-hidden="true"></canvas>
+<main class="panel" role="dialog" aria-modal="true" aria-labelledby="title" aria-describedby="text">
+  <p class="eyebrow" id="eyebrow">Break</p>
+  <h1 id="title"></h1>
+  <p class="text" id="text"></p>
+  <div class="ring" aria-hidden="true">
+    <svg width="168" height="168" viewBox="0 0 168 168">
+      <circle class="track" cx="84" cy="84" r="74" fill="none" stroke-width="10"/>
+      <circle class="bar" id="bar" cx="84" cy="84" r="74" fill="none" stroke-width="10"/>
+    </svg>
+    <div class="time" id="time" role="timer" aria-live="off"></div>
+  </div>
+  <p class="source" id="source"></p>
+  <div class="actions">
+    <button class="btn" id="postpone" hidden></button>
+    <button class="btn quiet" id="skip" hidden>Skip this break</button>
+  </div>
+  <p class="hint" id="hint"></p>
+</main>
+<script type="module" src="break.js"></script>
+</body>
+</html>
