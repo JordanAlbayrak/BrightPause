@@ -100,7 +100,7 @@ mod tests {
     fn rotation_never_repeats_within_half_the_pool() {
         let mut r = Rotation::new(42);
         let n = all().iter().filter(|i| i.kind == Kind::Mini).count();
-        let picks: Vec<String> = (0..60).map(|_| r.pick(Kind::Mini).id).collect();
+        let picks: Vec<String> = (0..n * 6).map(|_| r.pick(Kind::Mini).id).collect();
         for w in picks.windows(n / 2) {
             let mut v = w.to_vec();
             v.sort();
