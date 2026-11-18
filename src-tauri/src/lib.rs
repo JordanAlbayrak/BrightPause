@@ -131,6 +131,21 @@ fn handle(app: &AppHandle, events: Vec<Event>) {
     update_tray(app);
 }
 
+// Source links (target=_blank) go to the default browser, never to a webview popup.
+fn open_in_browser(url: tauri::webview::Url, _: tauri::webview::NewWindowFeatures) -> tauri::webview::NewWindowResponse<Wry> {
+    if url.scheme() == "https" {
+        #[cfg(windows)]
+        unsafe {
+            use windows_sys::Win32::UI::Shell::ShellExecuteW;
+            use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+            let wide = |s: &str| s.encode_utf16().chain(Some(0)).collect::<Vec<u16>>();
+            let (verb, target) = (wide("open"), wide(url.as_str()));
+            ShellExecuteW(std::ptr::null_mut(), verb.as_ptr(), target.as_ptr(), std::ptr::null(), std::ptr::null(), SW_SHOWNORMAL);
+        }
+    }
+    tauri::webview::NewWindowResponse::Deny
+}
+
 fn open_break_windows(app: &AppHandle, all_screens: bool) {
     let monitors = app.available_monitors().unwrap_or_default();
     let Some(main) = app.primary_monitor().ok().flatten().or_else(|| monitors.first().cloned()) else { return };
@@ -142,6 +157,7 @@ fn open_break_windows(app: &AppHandle, all_screens: bool) {
         .skip_taskbar(true)
         .resizable(false)
         .visible(false)
+        .on_new_window(open_in_browser)
         .build();
     if let Ok(w) = built {
         let _ = w.set_position(*main.position());
@@ -181,6 +197,7 @@ fn open_settings(app: &AppHandle) {
         .inner_size(720.0, 760.0)
         .min_inner_size(520.0, 560.0)
         .center()
+        .on_new_window(open_in_browser)
         .build();
 }
 

@@ -1,5 +1,5 @@
 ; Tauri's NSIS installer template (from tauri-bundler, used under its MIT licence: see LICENSE-tauri-template.txt).
-; Changes: a "Start with Windows" checkbox on the finish page (search for BrightPause) and the header image on the right.
+; Changes: a "Start with Windows" checkbox on the finish page (search for BrightPause) the header image on the right, and the uninstaller also clears the StartupApproved value.
 Unicode true
 ManifestDPIAware true
 ; Add in `dpiAwareness` `PerMonitorV2` to manifest for Windows 10 1607+ (note this should not affect lower versions since they should be able to ignore this and pick up `dpiAware` `true` set by `ManifestDPIAware true`)
@@ -935,6 +935,8 @@ Section Uninstall
   ; We do this when not updating (to preserve the registry value on updates)
   ${If} $UpdateMode <> 1
     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCTNAME}"
+    ; BrightPause: Windows keeps the on/off state of startup apps here; remove it too.
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" "${PRODUCTNAME}"
   ${EndIf}
 
   ; Delete app data if the checkbox is selected
