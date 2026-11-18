@@ -4,6 +4,55 @@ use std::path::Path;
 use crate::schedule::Timing;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Hotkey {
+    pub keys: String,
+    pub on: bool,
+}
+
+/// Global shortcuts, each with its own key combination and on/off switch.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Shortcuts {
+    pub break_now: Hotkey,
+    pub pause: Hotkey,
+    pub skip: Hotkey,
+}
+
+impl Default for Shortcuts {
+    fn default() -> Self {
+        let on = |keys: &str| Hotkey { keys: keys.into(), on: true };
+        Shortcuts { break_now: on("Ctrl+Alt+B"), pause: on("Ctrl+Alt+P"), skip: on("Ctrl+Alt+S") }
+    }
+}
+
+impl Shortcuts {
+    /// (action id, hotkey) for each shortcut, in menu order.
+    pub fn all(&self) -> [(&'static str, &Hotkey); 3] {
+        [("break-now", &self.break_now), ("pause-toggle", &self.pause), ("skip", &self.skip)]
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        let mut seen: Vec<String> = Vec::new();
+        for (_, h) in self.all() {
+            let parts: Vec<&str> = h.keys.split('+').collect();
+            let mods = parts.len() - 1;
+            let ok = mods >= 1 && parts[..mods].iter().all(|m| ["Ctrl", "Alt", "Shift"].contains(m)) && !parts[mods].is_empty();
+            if !ok {
+                return Err(format!("Not a shortcut: {}", h.keys));
+            }
+            if h.on {
+                let norm = h.keys.to_lowercase();
+                if seen.contains(&norm) {
+                    return Err(format!("Two shortcuts use {}.", h.keys));
+                }
+                seen.push(norm);
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
     pub mini_every_min: u32,
@@ -21,6 +70,9 @@ pub struct Settings {
     pub all_screens: bool,
     pub background: String,
     pub auto_update: bool,
+    pub language: String,
+    pub pause_in_calls: bool,
+    pub shortcuts: Shortcuts,
 }
 
 impl Default for Settings {
@@ -41,6 +93,9 @@ impl Default for Settings {
             all_screens: true,
             background: "theme".into(),
             auto_update: false,
+            language: "system".into(),
+            pause_in_calls: true,
+            shortcuts: Shortcuts::default(),
         }
     }
 }
@@ -76,6 +131,10 @@ impl Settings {
         if !["system", "light", "dark"].contains(&self.theme.as_str()) {
             return Err("Unknown theme.".into());
         }
+        if self.language != "system" && !crate::i18n::LANGS.contains(&self.language.as_str()) {
+            return Err("Unknown language.".into());
+        }
+        self.shortcuts.validate()?;
         if !valid_background(&self.background) {
             return Err("Unknown background.".into());
         }
@@ -92,7 +151,7 @@ impl Settings {
             long_every_nth: self.long_every_nth,
             long_length: self.long_length_min as f64 * 60.0,
             idle_reset: self.idle_reset_min as f64 * 60.0,
-            postpone_limit: if self.allow_postpone && !self.strict { 1 } else { 0 },
+            postpone_limit: if self.allow_postpone && !self.strict { 2 } else { 0 },
             ..Timing::default()
         }
     }
@@ -104,6 +163,9 @@ impl Settings {
             .map(|mut s| {
                 if !valid_background(&s.background) {
                     s.background = "theme".into();
+                }
+                if !crate::i18n::LANGS.contains(&s.language.as_str()) {
+                    s.language = "system".into();
                 }
                 s
             })
@@ -128,7 +190,7 @@ mod tests {
         let s = Settings::default();
         s.validate().unwrap();
         let t = s.timing();
-        assert_eq!((t.mini_every, t.mini_length, t.long_every_nth, t.long_length, t.postpone_limit), (1200.0, 20.0, 3, 300.0, 1));
+        assert_eq!((t.mini_every, t.mini_length, t.long_every_nth, t.long_length, t.postpone_limit), (1200.0, 20.0, 3, 300.0, 2));
     }
 
     #[test]
@@ -148,6 +210,15 @@ mod tests {
             Settings { background: good.into(), ..Settings::default() }.validate().unwrap();
         }
         assert!(!Settings::default().auto_update);
+        let mut s = Settings::default();
+        s.shortcuts.skip.keys = "Ctrl+Alt+B".into();
+        assert!(s.validate().is_err());
+        s.shortcuts.skip.on = false;
+        s.validate().unwrap();
+        s.shortcuts.pause.keys = "P".into();
+        assert!(s.validate().is_err());
+        assert!(Settings { language: "it".into(), ..Settings::default() }.validate().is_err());
+        Settings { language: "de".into(), ..Settings::default() }.validate().unwrap();
     }
 
     #[test]

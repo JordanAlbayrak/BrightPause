@@ -1,0 +1,379 @@
+{
+  "language_name": "Español",
+  "time_format": "%H:%M",
+  "kind.eye": "Descanso visual",
+  "kind.short": "Descanso corto",
+  "kind.long": "Descanso de movimiento",
+  "status.starting": "Iniciando...",
+  "status.next_mini": "Siguiente: descanso corto {when}",
+  "status.next_long": "Siguiente: descanso de movimiento {when}",
+  "status.soon": "en menos de un minuto",
+  "status.in_min": "en {n} min",
+  "status.on_mini": "En un descanso corto",
+  "status.on_long": "En un descanso de movimiento",
+  "status.paused_until": "En pausa hasta {time}",
+  "status.paused": "En pausa",
+  "notify.title": "{kind} en {n} segundos",
+  "notify.body": "Termina tu frase; BrightPause cubrirá la pantalla en breve.",
+  "tray.break_now": "Tomar un descanso ahora",
+  "tray.reset": "Reiniciar el temporizador",
+  "tray.pause_30": "Pausar 30 minutos",
+  "tray.pause_60": "Pausar 1 hora",
+  "tray.pause_morning": "Pausar hasta mañana",
+  "tray.pause_more": "Pausar más tiempo",
+  "tray.pause_120": "Durante 2 horas",
+  "tray.pause_forever": "Hasta que lo reanude",
+  "tray.resume": "Reanudar descansos",
+  "tray.settings": "Ajustes y estadísticas...",
+  "tray.quit": "Salir de BrightPause",
+  "err.image": "No se pudo usar esa imagen.",
+  "update.unconfigured": "Las actualizaciones no están configuradas en esta versión.",
+  "update.none_found": "No se encontró ninguna actualización.",
+  "hero.label": "Descansos tomados hoy",
+  "hero.week": "Descansos tomados en los últimos 7 días",
+  "today.skipped": "{n} omitidos",
+  "today.postponed": "{n} pospuestos",
+  "today.streak": "Racha de {n} días",
+  "today.nice": "Bien hecho.",
+  "today.first": "Tu primer descanso está en camino.",
+  "btn.break_now": "Tomar un descanso ahora",
+  "btn.resume": "Reanudar descansos",
+  "pause.label": "Pausar",
+  "pause.30": "30 min",
+  "pause.60": "1 hora",
+  "pause.morning": "Hasta mañana",
+  "card.breaks": "Descansos",
+  "set.eye_every": "Descanso visual cada",
+  "set.eye_every_sub": "Aparta la vista de la pantalla",
+  "set.eye_lasts": "El descanso visual dura",
+  "set.move": "Descanso de movimiento",
+  "set.move_sub": "Sustituye a uno de cada pocos descansos visuales",
+  "set.move_2": "Cada 2",
+  "set.move_3": "Cada 3",
+  "set.move_4": "Cada 4",
+  "set.move_lasts": "El descanso de movimiento dura",
+  "cadence.hour": "Así: un descanso visual de {sec} segundos cada {every} minutos, y un descanso de movimiento de {len} minutos aproximadamente cada hora.",
+  "cadence.hours": "Así: un descanso visual de {sec} segundos cada {every} minutos, y un descanso de movimiento de {len} minutos aproximadamente cada {n} horas.",
+  "cadence.minutes": "Así: un descanso visual de {sec} segundos cada {every} minutos, y un descanso de movimiento de {len} minutos aproximadamente cada {n} minutos.",
+  "unit.min": "{n} min",
+  "unit.sec": "{n} s",
+  "aria.less": "Disminuir",
+  "aria.more": "Aumentar",
+  "card.during": "Durante un descanso",
+  "set.heads_up": "Avisarme primero",
+  "set.heads_up_sub": "Una notificación de 10 a 30 segundos antes",
+  "set.postpone": "Permitir posponer",
+  "set.postpone_sub": "Hasta dos veces por descanso: 2 min (visual), 5 min (movimiento)",
+  "set.strict": "Modo estricto",
+  "set.strict_sub": "Sin omitir ni posponer",
+  "set.all_screens": "Cubrir todas las pantallas",
+  "set.sound": "Sonido",
+  "sound.chime": "Campanilla",
+  "sound.bell": "Campana",
+  "sound.soft": "Suave",
+  "sound.none": "Ninguno",
+  "set.volume": "Volumen",
+  "btn.play": "Probar",
+  "card.screen": "Pantalla de descanso",
+  "set.background": "Fondo",
+  "set.background_sub": "Las demás pantallas usan el mismo",
+  "tile.theme": "Tema",
+  "tile.your_image": "Tu imagen",
+  "tile.add_image": "Añadir imagen",
+  "color.pine": "Pino",
+  "color.teal": "Verde azulado",
+  "color.slate": "Pizarra",
+  "color.indigo": "Índigo",
+  "color.plum": "Ciruela",
+  "color.wine": "Vino",
+  "color.walnut": "Nogal",
+  "color.graphite": "Grafito",
+  "card.day": "En tu día a día",
+  "set.away": "Ausentarte cuenta como descanso tras",
+  "set.away_sub": "El temporizador se reinicia cuando regresas",
+  "set.start_windows": "Iniciar con Windows",
+  "set.appearance": "Apariencia",
+  "theme.system": "Sistema",
+  "theme.light": "Claro",
+  "theme.dark": "Oscuro",
+  "set.language": "Idioma",
+  "set.language_sub": "Sigue a Windows a menos que elijas uno",
+  "lang.system": "Igual que Windows",
+  "set.shortcuts": "Atajos",
+  "set.shortcuts_sub": "Haz clic en un atajo y pulsa las nuevas teclas",
+  "card.updates": "Actualizaciones",
+  "btn.install": "Instalar",
+  "update.available": "Versión {v} disponible",
+  "update.notes_default": "Hay una versión más nueva de BrightPause lista para instalar.",
+  "update.offline": "BrightPause nunca se conecta a internet a menos que se lo pidas.",
+  "btn.check": "Buscar actualizaciones",
+  "set.auto_update": "Actualizaciones automáticas",
+  "set.auto_update_sub": "Comprueba como máximo una vez al día",
+  "update.checking": "Comprobando...",
+  "update.installing": "Instalando. BrightPause se reiniciará.",
+  "update.latest": "Tienes la última versión (comprobada {when}).",
+  "update.error": "No se pudo comprobar: {msg}",
+  "update.last": "Última comprobación: {when}.",
+  "card.why": "Por qué estos descansos",
+  "why.intro": "Cada descanso visual lleva tu mirada a algo lejano; cada pocos descansos, te levantas y te mueves. Los consejos vienen de:",
+  "src.aoa": "American Optometric Association: la regla 20-20-20",
+  "src.aao": "American Academy of Ophthalmology: ordenadores y fatiga visual",
+  "src.albulescu": "Albulescu et al. 2022, micro-descansos y bienestar (PLOS ONE)",
+  "src.dunstan": "Dunstan et al. 2012, romper el sedentarismo (Diabetes Care)",
+  "src.ccohs": "Canadian Centre for Occupational Health and Safety: trabajar sentado",
+  "toast.saved": "Guardado",
+  "break.seconds": "{n} segundos",
+  "break.minutes": "{n} minutos",
+  "break.source": "Fuente:",
+  "break.challenge": "Un pequeño reto",
+  "break.postpone": "Posponer {n} min",
+  "break.skip": "Omitir este descanso",
+  "break.esc": "Esc para omitir",
+  "break.strict": "Modo estricto activado: este descanso dura hasta el final.",
+  "status.in_call": "En una llamada: el descanso espera a que termine",
+  "set.calls": "Esperar durante llamadas",
+  "set.calls_sub": "Sin descansos mientras una app usa el micrófono o la cámara",
+  "welcome.title": "Te damos la bienvenida a BrightPause",
+  "welcome.text": "Cada 20 minutos tendrás un descanso visual de 20 segundos y, más o menos cada hora, un breve descanso de movimiento. Cambia lo que quieras abajo: se guarda al momento. BrightPause está en la bandeja del sistema.",
+  "welcome.ok": "Entendido",
+  "short.break_now": "Tomar un descanso ahora",
+  "short.pause": "Pausar 1 hora o reanudar",
+  "short.skip": "Omitir el descanso actual",
+  "short.press": "Pulsa las teclas...",
+  "short.taken": "Otra app ya usa {keys}.",
+  "short.duplicate": "Otra acción ya usa {keys}.",
+  "short.need_modifier": "Mantén Ctrl, Alt o Mayús junto con la tecla.",
+  "key.ctrl": "Ctrl",
+  "key.shift": "Mayús",
+  "key.alt": "Alt",
+  "tips": {
+    "far-look": {
+      "title": "Mira a lo lejos",
+      "text": "Busca algo a unos 6 metros y deja descansar la vista ahí hasta que termine el temporizador."
+    },
+    "blink": {
+      "title": "Parpadea despacio",
+      "text": "Parpadeamos menos al leer una pantalla. Cierra los ojos completamente y despacio, diez veces."
+    },
+    "window": {
+      "title": "Mira por la ventana",
+      "text": "Mira por la ventana más cercana y busca lo más lejano que puedas ver."
+    },
+    "short-breaks": {
+      "title": "Los descansos cortos cuentan",
+      "text": "Los descansos de menos de diez minutos dan energía y reducen la fatiga. Aprovecha este al máximo."
+    },
+    "shoulders": {
+      "title": "Baja los hombros",
+      "text": "Deja caer los hombros, relaja la mandíbula y exhala despacio. Hazlo dos veces."
+    },
+    "posture": {
+      "title": "Revisa tu postura",
+      "text": "Cambia tu forma de sentarte y comprueba que la pantalla esté justo por debajo del nivel de tus ojos."
+    },
+    "shoulder-rolls": {
+      "title": "Rotación de hombros",
+      "text": "Rota los hombros hacia atrás cinco veces, despacio."
+    },
+    "breaths": {
+      "title": "Tres respiraciones",
+      "text": "Cierra los ojos y respira lento tres veces, exhalando más largo que inhalando."
+    },
+    "hands": {
+      "title": "Abre las manos",
+      "text": "Extiende los dedos, luego haz un puño relajado. Cinco veces."
+    },
+    "neck": {
+      "title": "Mira sobre el hombro",
+      "text": "Gira la cabeza despacio para mirar sobre un hombro y luego sobre el otro."
+    },
+    "walk": {
+      "title": "Camina un poco",
+      "text": "Caminar un poco en largos ratos sentado reduce el azúcar y la insulina tras las comidas. Camina hasta el final."
+    },
+    "water": {
+      "title": "Agua, por el camino largo",
+      "text": "Rellena tu vaso de agua y toma la ruta más larga para volver."
+    },
+    "squats": {
+      "title": "Diez sentadillas lentas",
+      "text": "Ponte de pie y haz diez sentadillas lentas o diez elevaciones de talones. Puedes apoyarte en el escritorio."
+    },
+    "stairs": {
+      "title": "Un tramo de escaleras",
+      "text": "Sube un tramo de escaleras y vuelve a bajar."
+    },
+    "reach": {
+      "title": "Estira y ladea",
+      "text": "Lleva ambos brazos sobre la cabeza y ladea suavemente hacia cada lado. Mantén cada posición diez segundos."
+    },
+    "break-up-sitting": {
+      "title": "Rompe el sedentarismo",
+      "text": "Caminar suave dos minutos cada 20 minutos redujo el azúcar y la insulina frente a estar sentado sin parar."
+    },
+    "outside": {
+      "title": "Aléjate un momento",
+      "text": "Deja la pantalla. Ponte frente a una ventana, estira y deja que tus ojos descansen en la distancia."
+    },
+    "tidy": {
+      "title": "Ordena un poco",
+      "text": "Ponte de pie y guarda tres cosas que tengas alrededor."
+    },
+    "palming": {
+      "title": "Palmas sobre los ojos",
+      "text": "Cubre tus ojos cerrados con las palmas para bloquear la luz. Respira despacio."
+    },
+    "near-far": {
+      "title": "Cerca y luego lejos",
+      "text": "Mira algo cercano y luego algo a 3 metros. Alterna varias veces."
+    },
+    "wide-view": {
+      "title": "Amplía tu vista",
+      "text": "Relaja la mirada y nota los bordes de la habitación sin mover los ojos."
+    },
+    "eyes-closed": {
+      "title": "Reposa tus ojos",
+      "text": "Cierra los ojos y deja que los músculos de tu cara se relajen."
+    },
+    "reach-up": {
+      "title": "Estira hacia el techo",
+      "text": "Lleva ambas manos hacia el techo y estira hacia arriba."
+    },
+    "seated-side": {
+      "title": "Estiramiento lateral",
+      "text": "Sentado recto, lleva un brazo sobre tu cabeza hacia el otro lado. Luego cambia."
+    },
+    "wrist-circles": {
+      "title": "Círculos de muñeca",
+      "text": "Rota las muñecas despacio, cinco veces en cada dirección."
+    },
+    "seated-twist": {
+      "title": "Giro suave",
+      "text": "Sentado recto, gira el tronco suavemente hacia un lado y luego hacia el otro."
+    },
+    "head-tilt": {
+      "title": "Oreja al hombro",
+      "text": "Inclina la cabeza suavemente hacia un hombro y luego hacia el otro. Muévete despacio."
+    },
+    "open-chest": {
+      "title": "Abre el pecho",
+      "text": "Entrelaza las manos tras la espalda y lleva suavemente los hombros hacia atrás."
+    },
+    "soft-face": {
+      "title": "Rostro relajado",
+      "text": "Deja caer la mandíbula y relaja la frente y la piel alrededor de tus ojos."
+    },
+    "straw-breath": {
+      "title": "Exhala por una pajita",
+      "text": "Exhala despacio con los labios fruncidos, como si soplaras por una pajita."
+    },
+    "belly-breath": {
+      "title": "Respiración abdominal",
+      "text": "Pon una mano en tu abdomen y siente cómo sube y baja durante tres respiraciones."
+    },
+    "even-breath": {
+      "title": "Respiración uniforme",
+      "text": "Inhala contando hasta cuatro y exhala contando hasta cuatro. Repite."
+    },
+    "sigh": {
+      "title": "Un gran suspiro",
+      "text": "Inhala y deja salir el aire con un suspiro largo y audible."
+    },
+    "sip": {
+      "title": "Unos sorbos",
+      "text": "Bebe unos sorbos de agua. Si el vaso está vacío, rellénalo en el próximo descanso largo."
+    },
+    "toes": {
+      "title": "Mueve los dedos",
+      "text": "Mueve los dedos de los pies dentro de tus zapatos y siente tus pies en el suelo."
+    },
+    "ankles": {
+      "title": "Círculos de tobillo",
+      "text": "Levanta un pie y rota el tobillo despacio, luego el otro."
+    },
+    "seated-march": {
+      "title": "Marcha sentado",
+      "text": "Sentado recto, levanta una rodilla un poco y luego la otra, como una marcha lenta."
+    },
+    "toe-rise": {
+      "title": "De puntillas",
+      "text": "Ponte de pie, apóyate en el escritorio y sube despacio de puntillas cinco veces."
+    },
+    "blades": {
+      "title": "Omóplatos",
+      "text": "Junta suavemente los omóplatos, mantén durante una respiración y suelta. Tres veces."
+    },
+    "wrist-bend": {
+      "title": "Estiramiento de muñeca",
+      "text": "Mantén un brazo extendido, palma hacia abajo, y dobla la muñeca hacia arriba y abajo. Cambia de brazo."
+    },
+    "shake-out": {
+      "title": "Sacúdete",
+      "text": "Deja colgar los brazos y sacude las manos con soltura."
+    },
+    "chin-drop": {
+      "title": "Barbilla al pecho",
+      "text": "Deja caer la barbilla lentamente hacia el pecho y mantén durante una respiración."
+    },
+    "smile": {
+      "title": "Sonríe y relaja",
+      "text": "Sonríe suavemente y luego deja que toda tu cara se relaje."
+    },
+    "point-flex": {
+      "title": "Punta y flexión",
+      "text": "Estira las puntas de los pies hacia adelante y luego llévalas hacia atrás. Cinco veces."
+    },
+    "wall-stand": {
+      "title": "Apóyate en la pared",
+      "text": "Ponte de pie con la espalda contra la pared y respira despacio un minuto. Luego camina un poco."
+    },
+    "arm-across": {
+      "title": "Brazo cruzado",
+      "text": "Ponte de pie, lleva un brazo hacia el pecho y sujétalo con el otro por unas respiraciones. Cambia."
+    },
+    "standing-twist": {
+      "title": "Giro de pie",
+      "text": "Ponte de pie con los pies separados y gira el tronco suavemente de lado a lado, diez veces."
+    },
+    "side-steps": {
+      "title": "Pasos laterales",
+      "text": "Da diez pasos laterales lentos hacia un lado y diez hacia el otro. Repite unas cuantas veces."
+    },
+    "arm-swings": {
+      "title": "Balanceo de brazos",
+      "text": "De pie, balancea suavemente los brazos por delante del cuerpo, de lado a lado, durante un minuto."
+    },
+    "hip-circles": {
+      "title": "Círculos de cadera",
+      "text": "Ponte de pie con las manos en las caderas y haz círculos lentos, cinco en cada dirección."
+    },
+    "rock": {
+      "title": "De talón a punta",
+      "text": "Apoyado en el escritorio, balancéate despacio sobre las puntas y luego sobre los talones. Diez veces."
+    },
+    "wall-walk": {
+      "title": "Sube por la pared",
+      "text": "Frente a una pared, sube los dedos por ella hasta donde te resulte cómodo. Baja despacio."
+    },
+    "breath-notice": {
+      "title": "Siente tu respiración",
+      "text": "Quédate quieto, cierra los ojos y nota el aire entrando y saliendo por tu nariz."
+    },
+    "march": {
+      "title": "Marcha en el sitio",
+      "text": "Marcha en el sitio a un ritmo fácil durante un minuto, descansa y repite."
+    },
+    "four-six": {
+      "title": "Inhala 4, exhala 6",
+      "text": "De pie y erguido, inhala contando cuatro y exhala contando seis. Diez veces."
+    },
+    "calf-stretch": {
+      "title": "Estiramiento de gemelos",
+      "text": "Manos en la pared, lleva un pie atrás con el talón en el suelo e inclínate suavemente. Cambia."
+    },
+    "wake-stretch": {
+      "title": "Estiramiento matutino",
+      "text": "Estírate como si acabaras de despertar: brazos, piernas y espalda, despacio, como mejor te sienta."
+    }
+  }
+}

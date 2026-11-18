@@ -1,5 +1,6 @@
 import { play } from './sound.js';
 import { paint, wantsDark, loadImage, bytesToBase64 } from './backgrounds.js';
+import { t, loadStrings } from './i18n.js';
 
 const { invoke } = window.__TAURI__.core;
 const $ = (id) => document.getElementById(id);
@@ -12,7 +13,7 @@ function clock(seconds) {
 }
 
 function lengthText(seconds) {
-  return seconds >= 60 ? `${Math.round(seconds / 60)} minutes` : `${Math.round(seconds)} seconds`;
+  return seconds >= 60 ? t('break.minutes', { n: Math.round(seconds / 60) }) : t('break.seconds', { n: Math.round(seconds) });
 }
 
 async function drawBackground(bg) {
@@ -40,6 +41,7 @@ async function drawBackground(bg) {
 async function main() {
   const info = await invoke('get_break');
   if (!info) return;
+  await loadStrings();
   const bg = info.background || 'theme';
   if (wantsDark(bg)) document.documentElement.dataset.theme = 'dark';
   else if (info.theme !== 'system') document.documentElement.dataset.theme = info.theme;
@@ -56,23 +58,23 @@ async function main() {
     a.target = '_blank';
     a.rel = 'noopener';
     a.textContent = info.item.source_title;
-    $('source').append('Source: ', a);
+    $('source').append(`${t('break.source')} `, a);
   } else if (info.item.type === 'challenge') {
-    $('source').textContent = 'A small challenge';
+    $('source').textContent = t('break.challenge');
   }
 
   const postponeMinutes = info.kind === 'long' ? 5 : 2;
   if (info.can_postpone) {
     $('postpone').hidden = false;
-    $('postpone').textContent = `Postpone ${postponeMinutes} min`;
+    $('postpone').textContent = t('break.postpone', { n: postponeMinutes });
     $('postpone').addEventListener('click', () => invoke('end_break', { outcome: 'postponed' }));
   }
   if (info.can_skip) {
     $('skip').hidden = false;
     $('skip').addEventListener('click', () => invoke('end_break', { outcome: 'skipped' }));
-    $('hint').textContent = 'Esc skips';
+    $('hint').textContent = t('break.esc');
   } else {
-    $('hint').textContent = 'Strict mode is on: this break runs to the end.';
+    $('hint').textContent = t('break.strict');
   }
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && info.can_skip) invoke('end_break', { outcome: 'skipped' });

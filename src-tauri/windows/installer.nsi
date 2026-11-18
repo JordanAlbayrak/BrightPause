@@ -1,5 +1,5 @@
 ; Tauri's NSIS installer template (from tauri-bundler, used under its MIT licence: see LICENSE-tauri-template.txt).
-; Changes: a "Start with Windows" checkbox on the finish page (search for BrightPause) the header image on the right, and the uninstaller also clears the StartupApproved value.
+; Changes: dark pages (search for DarkPage), a "Start with Windows" checkbox on the finish page (search for BrightPause) the header image on the right, and the uninstaller also clears the StartupApproved value.
 Unicode true
 ManifestDPIAware true
 ; Add in `dpiAwareness` `PerMonitorV2` to manifest for Windows 10 1607+ (note this should not affect lower versions since they should be able to ignore this and pick up `dpiAware` `true` set by `ManifestDPIAware true`)
@@ -164,6 +164,59 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
   !define MUI_UNICON "${UNINSTALLERICON}"
 !endif
 
+; BrightPause: dark pages in the app's colours. MUI colours the header and the welcome and
+; finish pages; DarkPage recolours each control on the other pages. Themed checkboxes, radio
+; buttons and group boxes ignore text colours, so they lose their theme (and draw flat).
+; Push buttons and the progress bar keep the system look.
+!define MUI_BGCOLOR 111715
+!define MUI_TEXTCOLOR F4F1EA
+!define MUI_CUSTOMFUNCTION_GUIINIT DarkFrame
+!define MUI_CUSTOMFUNCTION_UNGUIINIT un.DarkFrame
+!define /ifndef GW_CHILD 5
+!define /ifndef GW_HWNDNEXT 2
+!macro DARK_FUNCTIONS UN
+Function ${UN}DarkFrame
+  SetCtlColors $HWNDPARENT F4F1EA 111715
+  GetDlgItem $0 $HWNDPARENT 1028
+  SetCtlColors $0 93A099 111715
+  GetDlgItem $0 $HWNDPARENT 1256
+  SetCtlColors $0 93A099 111715
+FunctionEnd
+Function ${UN}DarkPage
+  ; Every dialog under the installer window: on the welcome and finish pages the controls sit
+  ; in a second dialog that nsDialogs creates.
+  StrCpy $4 0
+  ${Do}
+    FindWindow $4 "#32770" "" $HWNDPARENT $4
+    ${If} $4 == 0
+      ${Break}
+    ${EndIf}
+    SetCtlColors $4 F4F1EA 111715
+    System::Call 'user32::GetWindow(p r4, i ${GW_CHILD}) p .r1'
+    ${DoWhile} $1 != 0
+      System::Call 'user32::GetClassNameW(p r1, w .r2, i 64)'
+      ${If} $2 == "Button"
+        System::Call 'user32::GetWindowLongW(p r1, i -16) i .r3'
+        IntOp $3 $3 & 0xF
+        ${If} $3 > 1
+          System::Call 'uxtheme::SetWindowTheme(p r1, w " ", w " ")'
+        ${EndIf}
+      ${EndIf}
+      ${If} $2 == "SysListView32"
+        SendMessage $1 0x1001 0 0x151711
+        SendMessage $1 0x1026 0 0x151711
+        SendMessage $1 0x1024 0 0xEAF1F4
+      ${ElseIf} $2 != "msctls_progress32"
+        SetCtlColors $1 F4F1EA 111715
+      ${EndIf}
+      System::Call 'user32::GetWindow(p r1, i ${GW_HWNDNEXT}) p .r1'
+    ${Loop}
+  ${Loop}
+FunctionEnd
+!macroend
+!insertmacro DARK_FUNCTIONS ""
+!insertmacro DARK_FUNCTIONS "un."
+
 ; Define registry key to store installer language
 !define MUI_LANGDLL_REGISTRY_ROOT "HKCU"
 !define MUI_LANGDLL_REGISTRY_KEY "${MANUPRODUCTKEY}"
@@ -172,6 +225,7 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
 ; Installer pages, must be ordered as they appear
 ; 1. Welcome Page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SkipIfPassive
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW DarkPage
 !insertmacro MUI_PAGE_WELCOME
 
 ; 2. License Page (if defined)
@@ -317,7 +371,8 @@ Function PageReinstall
     ${EndIf}
 
     ${NSD_SetFocus} $R2
-    nsDialogs::Show
+    Call DarkPage
+  nsDialogs::Show
   ${EndIf}
 FunctionEnd
 Function PageReinstallUpdateSelection
@@ -416,6 +471,7 @@ FunctionEnd
 
 ; 5. Choose install directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SkipIfPassive
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW DarkPage
 !insertmacro MUI_PAGE_DIRECTORY
 
 ; 6. Start menu shortcut page
@@ -429,6 +485,7 @@ Var AppStartMenuFolder
 !insertmacro MUI_PAGE_STARTMENU Application $AppStartMenuFolder
 
 ; 7. Installation page
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW DarkPage
 !insertmacro MUI_PAGE_INSTFILES
 
 ; 8. Finish page
@@ -452,10 +509,10 @@ Var AppStartMenuFolder
 Var AutostartCheckbox
 Var AutostartState
 Function AutostartShow
-  ${NSD_CreateCheckbox} 120u 128u 195u 12u "Start ${PRODUCTNAME} when Windows starts"
+  ${NSD_CreateCheckbox} 120u 128u 195u 12u "$(AutostartText)"
   Pop $AutostartCheckbox
-  SetCtlColors $AutostartCheckbox "" "ffffff"
   ${NSD_Check} $AutostartCheckbox
+  Call DarkPage
 FunctionEnd
 Function AutostartLeave
   ${NSD_GetState} $AutostartCheckbox $AutostartState
@@ -507,6 +564,7 @@ Function un.ConfirmShow ; Add add a `Delete app data` check box
   Pop $DeleteAppDataCheckbox
   SendMessage $HWNDPARENT ${WM_GETFONT} 0 0 $1
   SendMessage $DeleteAppDataCheckbox ${WM_SETFONT} $1 1
+  Call un.DarkPage
 FunctionEnd
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.ConfirmLeave
 Function un.ConfirmLeave
@@ -516,6 +574,7 @@ FunctionEnd
 !insertmacro MUI_UNPAGE_CONFIRM
 
 ; 2. Uninstalling Page
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW un.DarkPage
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ;Languages
@@ -533,6 +592,11 @@ LangString choowHowToInstall 0 ""
 {{#each language_files}}
   !include "{{this}}"
 {{/each}}
+; BrightPause: the finish-page checkbox in each installer language (tauri.conf.json nsis.languages).
+LangString AutostartText ${LANG_ENGLISH} "Start ${PRODUCTNAME} when Windows starts"
+LangString AutostartText ${LANG_FRENCH} "Lancer ${PRODUCTNAME} au démarrage de Windows"
+LangString AutostartText ${LANG_SPANISH} "Iniciar ${PRODUCTNAME} al arrancar Windows"
+LangString AutostartText ${LANG_GERMAN} "${PRODUCTNAME} beim Windows-Start öffnen"
 
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode

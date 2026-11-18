@@ -181,3 +181,14 @@ input[type="range"] { accent-color: var(--accent); width: 9rem; }
 .sources { color: var(--muted); font-size: 0.9rem; padding: 4px 16px 14px; }
 .sources li { margin: 4px 0; }
 .sources ul { padding-left: 18px; margin: 6px 0 0; }
+
+.select { min-height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card, transparent); color: inherit; font: 600 0.92rem var(--sans); cursor: pointer; }
+.select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.welcome { background: var(--card); border: 1px solid var(--accent); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; }
+.welcome h1 { font: 600 1.5rem var(--serif); margin: 0 0 8px; }
+.welcome p { margin: 0 0 14px; }
+
+.hotkey { display: flex; align-items: center; gap: 10px; }
+.btn.keys { min-width: 140px; }
+.btn.keys.recording { border-color: var(--accent); color: var(--accent); }

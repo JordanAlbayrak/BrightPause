@@ -6,6 +6,7 @@ $site = Join-Path $env:TEMP 'brightpause-preview'
 Remove-Item $site -Recurse -Force -ErrorAction SilentlyContinue
 Copy-Item "$root\ui" $site -Recurse
 Copy-Item "$PSScriptRoot\mock-tauri.js" $site
+Copy-Item "$root\src-tauri\i18n\en.json" "$site\i18n-en.json"
 foreach ($f in Get-ChildItem $site -Filter *.html) {
   (Get-Content $f.FullName -Raw).Replace('<script type="module"', '<script src="mock-tauri.js"></script><script type="module"') | Set-Content $f.FullName -NoNewline
 }

@@ -1,0 +1,379 @@
+{
+  "language_name": "Deutsch",
+  "time_format": "%H:%M",
+  "kind.eye": "Augenpause",
+  "kind.short": "Kurze Pause",
+  "kind.long": "Bewegungspause",
+  "status.starting": "Startet...",
+  "status.next_mini": "Als Nächstes: kurze Pause {when}",
+  "status.next_long": "Als Nächstes: Bewegungspause {when}",
+  "status.soon": "in weniger als einer Minute",
+  "status.in_min": "in {n} Min.",
+  "status.on_mini": "In einer kurzen Pause",
+  "status.on_long": "In einer Bewegungspause",
+  "status.paused_until": "Pausiert bis {time}",
+  "status.paused": "Pausiert",
+  "notify.title": "{kind} in {n} Sekunden",
+  "notify.body": "Beende deinen Satz; BrightPause übernimmt dann den Bildschirm.",
+  "tray.break_now": "Jetzt Pause machen",
+  "tray.reset": "Timer neu starten",
+  "tray.pause_30": "30 Minuten pausieren",
+  "tray.pause_60": "1 Stunde pausieren",
+  "tray.pause_morning": "Bis morgen pausieren",
+  "tray.pause_more": "Länger pausieren",
+  "tray.pause_120": "Für 2 Stunden",
+  "tray.pause_forever": "Bis ich fortsetze",
+  "tray.resume": "Pausen fortsetzen",
+  "tray.settings": "Einstellungen und Statistik...",
+  "tray.quit": "BrightPause beenden",
+  "err.image": "Dieses Bild konnte nicht verwendet werden.",
+  "update.unconfigured": "Updates sind in dieser Version nicht eingerichtet.",
+  "update.none_found": "Kein Update gefunden.",
+  "hero.label": "Pausen heute",
+  "hero.week": "Pausen in den letzten 7 Tagen",
+  "today.skipped": "{n} übersprungen",
+  "today.postponed": "{n} verschoben",
+  "today.streak": "{n} Tage in Folge",
+  "today.nice": "Gut gemacht.",
+  "today.first": "Deine erste Pause kommt bald.",
+  "btn.break_now": "Jetzt Pause machen",
+  "btn.resume": "Pausen fortsetzen",
+  "pause.label": "Pausieren",
+  "pause.30": "30 Min.",
+  "pause.60": "1 Std.",
+  "pause.morning": "Bis morgen",
+  "card.breaks": "Pausen",
+  "set.eye_every": "Augenpause alle",
+  "set.eye_every_sub": "Vom Bildschirm wegblicken",
+  "set.eye_lasts": "Augenpause dauert",
+  "set.move": "Bewegungspause",
+  "set.move_sub": "Ersetzt regelmäßig eine Augenpause",
+  "set.move_2": "Jede 2.",
+  "set.move_3": "Jede 3.",
+  "set.move_4": "Jede 4.",
+  "set.move_lasts": "Bewegungspause dauert",
+  "cadence.hour": "Also: eine {sec}-Sekunden-Augenpause alle {every} Minuten und eine {len}-Minuten-Bewegungspause etwa stündlich.",
+  "cadence.hours": "Also: eine {sec}-Sekunden-Augenpause alle {every} Minuten und eine {len}-Minuten-Bewegungspause etwa alle {n} Stunden.",
+  "cadence.minutes": "Also: eine {sec}-Sekunden-Augenpause alle {every} Minuten und eine {len}-Minuten-Bewegungspause etwa alle {n} Minuten.",
+  "unit.min": "{n} Min.",
+  "unit.sec": "{n} Sek.",
+  "aria.less": "Verringern",
+  "aria.more": "Erhöhen",
+  "card.during": "Während einer Pause",
+  "set.heads_up": "Vorher ankündigen",
+  "set.heads_up_sub": "Eine Benachrichtigung 10 bis 30 Sekunden vorher",
+  "set.postpone": "Verschieben erlauben",
+  "set.postpone_sub": "Bis zu zweimal pro Pause: 2 Min. (Augen), 5 Min. (Bewegung)",
+  "set.strict": "Strenger Modus",
+  "set.strict_sub": "Kein Überspringen oder Verschieben",
+  "set.all_screens": "Alle Bildschirme abdecken",
+  "set.sound": "Ton",
+  "sound.chime": "Klangspiel",
+  "sound.bell": "Glocke",
+  "sound.soft": "Sanft",
+  "sound.none": "Aus",
+  "set.volume": "Lautstärke",
+  "btn.play": "Anhören",
+  "card.screen": "Pausenbildschirm",
+  "set.background": "Hintergrund",
+  "set.background_sub": "Die anderen Bildschirme zeigen dasselbe",
+  "tile.theme": "Design",
+  "tile.your_image": "Dein Bild",
+  "tile.add_image": "Bild hinzufügen",
+  "color.pine": "Kiefer",
+  "color.teal": "Blaugrün",
+  "color.slate": "Schiefer",
+  "color.indigo": "Indigo",
+  "color.plum": "Pflaume",
+  "color.wine": "Wein",
+  "color.walnut": "Walnuss",
+  "color.graphite": "Graphit",
+  "card.day": "Im Alltag",
+  "set.away": "Abwesenheit zählt als Pause nach",
+  "set.away_sub": "Der Timer startet neu, wenn du zurückkehrst",
+  "set.start_windows": "Mit Windows starten",
+  "set.appearance": "Aussehen",
+  "theme.system": "System",
+  "theme.light": "Hell",
+  "theme.dark": "Dunkel",
+  "set.language": "Sprache",
+  "set.language_sub": "Folgt Windows, außer du wählst eine aus",
+  "lang.system": "Wie Windows",
+  "set.shortcuts": "Tastenkombinationen",
+  "set.shortcuts_sub": "Klicke auf ein Tastenkürzel und drücke dann die neuen Tasten",
+  "card.updates": "Updates",
+  "btn.install": "Installieren",
+  "update.available": "Version {v} verfügbar",
+  "update.notes_default": "Eine neuere Version von BrightPause kann installiert werden.",
+  "update.offline": "BrightPause geht nur online, wenn du darum bittest.",
+  "btn.check": "Nach Updates suchen",
+  "set.auto_update": "Automatische Updates",
+  "set.auto_update_sub": "Prüft höchstens einmal täglich",
+  "update.checking": "Wird geprüft...",
+  "update.installing": "Wird installiert. BrightPause startet neu.",
+  "update.latest": "Du hast die neueste Version (geprüft {when}).",
+  "update.error": "Prüfung fehlgeschlagen: {msg}",
+  "update.last": "Zuletzt geprüft: {when}.",
+  "card.why": "Warum diese Pausen",
+  "why.intro": "Jede Augenpause lässt deinen Blick auf etwas Fernem ruhen; alle paar Pausen stehst du auf und bewegst dich. Die Tipps stammen von:",
+  "src.aoa": "American Optometric Association: die 20-20-20-Regel",
+  "src.aao": "American Academy of Ophthalmology: Computer und Augenbelastung",
+  "src.albulescu": "Albulescu et al. 2022, Mikropausen und Wohlbefinden (PLOS ONE)",
+  "src.dunstan": "Dunstan et al. 2012, Unterbrechen des Sitzens (Diabetes Care)",
+  "src.ccohs": "Canadian Centre for Occupational Health and Safety: Arbeiten im Sitzen",
+  "toast.saved": "Gespeichert",
+  "break.seconds": "{n} Sekunden",
+  "break.minutes": "{n} Minuten",
+  "break.source": "Quelle:",
+  "break.challenge": "Eine kleine Herausforderung",
+  "break.postpone": "{n} Min. verschieben",
+  "break.skip": "Diese Pause überspringen",
+  "break.esc": "Esc zum Überspringen",
+  "break.strict": "Strenger Modus ist an: Diese Pause läuft bis zum Ende.",
+  "status.in_call": "Im Anruf: Die Pause wartet, bis er endet",
+  "set.calls": "Während Anrufen warten",
+  "set.calls_sub": "Keine Pause, solange eine App Mikrofon oder Kamera nutzt",
+  "welcome.title": "Willkommen bei BrightPause",
+  "welcome.text": "Alle 20 Minuten bekommst du eine 20-sekündige Augenpause und etwa einmal pro Stunde eine kurze Bewegungspause. Ändere unten, was du willst; es wird sofort gespeichert. BrightPause findest du im Infobereich der Taskleiste.",
+  "welcome.ok": "Verstanden",
+  "short.break_now": "Jetzt Pause machen",
+  "short.pause": "1 Std. pausieren oder fortsetzen",
+  "short.skip": "Aktuelle Pause überspringen",
+  "short.press": "Tasten drücken...",
+  "short.taken": "{keys} wird schon von einer anderen App verwendet.",
+  "short.duplicate": "Eine andere Aktion nutzt schon {keys}.",
+  "short.need_modifier": "Halte Strg, Alt oder Umschalt zusammen mit der Taste.",
+  "key.ctrl": "Strg",
+  "key.shift": "Umschalt",
+  "key.alt": "Alt",
+  "tips": {
+    "far-look": {
+      "title": "In die Ferne schauen",
+      "text": "Such dir etwas in etwa 6 Metern Entfernung und lass deine Augen darauf ruhen, bis der Timer abläuft."
+    },
+    "blink": {
+      "title": "Langsam blinzeln",
+      "text": "Am Bildschirm blinzeln wir seltener. Schließ die Augen zehnmal ganz und langsam."
+    },
+    "window": {
+      "title": "Aus dem Fenster",
+      "text": "Schaue aus dem nächsten Fenster und finde das am weitesten entfernte Objekt, das du sehen kannst."
+    },
+    "short-breaks": {
+      "title": "Kurze Pausen zählen",
+      "text": "Pausen unter zehn Minuten geben Energie und senken die Müdigkeit. Nutze diese ganz."
+    },
+    "shoulders": {
+      "title": "Schultern sinken lassen",
+      "text": "Lass die Schultern sinken, lockere den Kiefer und atme langsam aus. Zweimal."
+    },
+    "posture": {
+      "title": "Haltung prüfen",
+      "text": "Ändere deine Sitzposition und prüfe, ob der Bildschirm knapp unter Augenhöhe steht."
+    },
+    "shoulder-rolls": {
+      "title": "Schulterrollen",
+      "text": "Rolle deine Schultern fünfmal langsam nach hinten."
+    },
+    "breaths": {
+      "title": "Drei Atemzüge",
+      "text": "Schließe deine Augen und nimm drei langsame Atemzüge, beim Ausatmen länger als beim Einatmen."
+    },
+    "hands": {
+      "title": "Hände öffnen",
+      "text": "Strecke deine Finger weit auseinander, dann mache eine lockere Faust. Fünfmal."
+    },
+    "neck": {
+      "title": "Über die Schulter schauen",
+      "text": "Drehe deinen Kopf langsam, um über eine Schulter zu schauen, dann über die andere."
+    },
+    "walk": {
+      "title": "Ein kurzer Spaziergang",
+      "text": "Leichtes Gehen bei langem Sitzen senkt Blutzucker und Insulin nach dem Essen. Geh, bis der Timer abläuft."
+    },
+    "water": {
+      "title": "Wasser, den weiten Weg",
+      "text": "Fülle dein Glas Wasser nach und nimm den längsten Weg zurück."
+    },
+    "squats": {
+      "title": "Zehn langsame Kniebeugen",
+      "text": "Steh auf und mach zehn langsame Kniebeugen oder zehnmal Fersenheben. Halt dich gern am Tisch fest."
+    },
+    "stairs": {
+      "title": "Ein Stockwerk",
+      "text": "Geh ein Stockwerk hoch und wieder hinunter."
+    },
+    "reach": {
+      "title": "Strecken und neigen",
+      "text": "Streck beide Arme über den Kopf und neig dich sanft zu jeder Seite. Halte jeweils etwa zehn Sekunden."
+    },
+    "break-up-sitting": {
+      "title": "Sitzen unterbrechen",
+      "text": "Zwei Minuten leichtes Gehen alle 20 Minuten senkten Blutzucker und Insulin im Vergleich zu durchgehendem Sitzen."
+    },
+    "outside": {
+      "title": "Kurz weggehen",
+      "text": "Verlasse den Bildschirm. Stelle dich an ein Fenster, strecke dich und lass deine Augen in die Ferne schweifen."
+    },
+    "tidy": {
+      "title": "Eine Sache aufräumen",
+      "text": "Stehe auf und räume drei Dinge in deiner Umgebung weg."
+    },
+    "palming": {
+      "title": "Hände auf die Augen",
+      "text": "Leg die hohlen Hände über die geschlossenen Augen, damit kein Licht durchkommt. Atme langsam."
+    },
+    "near-far": {
+      "title": "Nah, dann fern",
+      "text": "Schaue auf etwas Nahes, dann auf etwas in 3 Metern Entfernung. Wechsle das einige Male."
+    },
+    "wide-view": {
+      "title": "Blick weiten",
+      "text": "Lasse deinen Blick weich werden und bemerke die Ränder des Raumes, ohne die Augen zu bewegen."
+    },
+    "eyes-closed": {
+      "title": "Augen ausruhen",
+      "text": "Schließe deine Augen und lass die Gesichtsmuskeln weich werden."
+    },
+    "reach-up": {
+      "title": "Zur Decke greifen",
+      "text": "Strecke beide Hände zur Decke und mach dich ganz lang."
+    },
+    "seated-side": {
+      "title": "Seitliche Dehnung",
+      "text": "Sitze aufrecht, strecke einen Arm über den Kopf zur anderen Seite. Dann wechseln."
+    },
+    "wrist-circles": {
+      "title": "Handgelenkskreisen",
+      "text": "Kreise deine Handgelenke langsam, fünfmal in jede Richtung."
+    },
+    "seated-twist": {
+      "title": "Sanfte Drehung",
+      "text": "Sitze aufrecht, drehe deinen Oberkörper sanft zur einen Seite, dann zur anderen."
+    },
+    "open-chest": {
+      "title": "Brust öffnen",
+      "text": "Verschränke die Hände hinter dem Rücken und ziehe die Schultern sanft nach hinten."
+    },
+    "soft-face": {
+      "title": "Entspanntes Gesicht",
+      "text": "Lass den Kiefer locker und entspanne die Stirn und die Haut um die Augen."
+    },
+    "straw-breath": {
+      "title": "Wie durch einen Strohhalm",
+      "text": "Atme langsam durch gespitzte Lippen aus, als würdest du durch einen Strohhalm pusten."
+    },
+    "belly-breath": {
+      "title": "Bauchatmung",
+      "text": "Lege eine Hand auf den Bauch und spüre, wie er bei drei Atemzügen hebt und sinkt."
+    },
+    "even-breath": {
+      "title": "Gleichmäßig atmen",
+      "text": "Atme bis vier zählend ein und bis vier zählend aus. Wiederhole das."
+    },
+    "sigh": {
+      "title": "Ein großer Seufzer",
+      "text": "Atme ein und lass die Luft mit einem langen, hörbaren Seufzer entweichen."
+    },
+    "sip": {
+      "title": "Ein paar Schlucke",
+      "text": "Nimm ein paar Schlucke Wasser. Wenn das Glas leer ist, fülle es bei der nächsten langen Pause auf."
+    },
+    "toes": {
+      "title": "Zehen wackeln",
+      "text": "Wackle mit den Zehen in deinen Schuhen und spüre deine Füße auf dem Boden."
+    },
+    "ankles": {
+      "title": "Knöchelkreisen",
+      "text": "Hebe einen Fuß und kreise den Knöchel langsam, dann den anderen."
+    },
+    "seated-march": {
+      "title": "Marschieren im Sitzen",
+      "text": "Sitze aufrecht, hebe abwechselnd ein Knie leicht an, wie beim langsamen Marschieren."
+    },
+    "toe-rise": {
+      "title": "Auf die Zehenspitzen",
+      "text": "Stelle dich hin, halte dich am Schreibtisch fest und hebe dich fünfmal langsam auf die Zehenspitzen."
+    },
+    "blades": {
+      "title": "Schulterblätter",
+      "text": "Drücke deine Schulterblätter sanft zusammen, halte für einen Atemzug, lass locker. Dreimal."
+    },
+    "wrist-bend": {
+      "title": "Handgelenk dehnen",
+      "text": "Streck einen Arm aus, Handfläche nach unten, und beuge das Handgelenk sanft auf und ab. Arm wechseln."
+    },
+    "shake-out": {
+      "title": "Ausschütteln",
+      "text": "Lasse deine Arme hängen und schüttle deine Hände locker aus."
+    },
+    "chin-drop": {
+      "title": "Kinn zur Brust",
+      "text": "Lasse dein Kinn langsam zur Brust sinken und halte es für einen Atemzug."
+    },
+    "smile": {
+      "title": "Lächeln, dann entspannen",
+      "text": "Lächle sanft und lass dann dein ganzes Gesicht entspannen."
+    },
+    "point-flex": {
+      "title": "Strecken und beugen",
+      "text": "Strecke deine Zehen weg und ziehe sie dann wieder zu dir. Fünfmal."
+    },
+    "wall-stand": {
+      "title": "An die Wand lehnen",
+      "text": "Lehn dich mit dem Rücken an eine Wand und atme eine Minute langsam. Geh dann ein paar Schritte."
+    },
+    "arm-across": {
+      "title": "Arm vor die Brust",
+      "text": "Stelle dich hin, lege einen Arm vor die Brust und halte ihn mit dem anderen für ein paar Atemzüge. Wechsel."
+    },
+    "standing-twist": {
+      "title": "Stehende Drehung",
+      "text": "Stelle dich mit auseinanderliegenden Füßen hin und drehe deinen Oberkörper zehnmal langsam von Seite zu Seite."
+    },
+    "side-steps": {
+      "title": "Seitliche Schritte",
+      "text": "Mache zehn langsame Schritte zur Seite, dann zehn zurück. Wiederhole das einige Male."
+    },
+    "arm-swings": {
+      "title": "Arme schwingen",
+      "text": "Steh auf und schwing die Arme eine Minute sanft vor dem Körper hin und her."
+    },
+    "hip-circles": {
+      "title": "Hüftkreisen",
+      "text": "Stelle dich mit den Händen auf die Hüften und mache fünf langsame Kreise in jede Richtung."
+    },
+    "rock": {
+      "title": "Ferse zu Zehe",
+      "text": "Halte dich am Schreibtisch fest, rolle langsam auf die Zehenspitzen und dann zurück auf die Fersen. Zehnmal."
+    },
+    "wall-walk": {
+      "title": "Finger an der Wand",
+      "text": "Stell dich vor eine Wand und lass die Finger so hoch wandern, wie es angenehm ist. Langsam wieder runter."
+    },
+    "breath-notice": {
+      "title": "Atem wahrnehmen",
+      "text": "Stehe still, schließe deine Augen und bemerke die Luft, die in deine Nase hinein- und herausströmt."
+    },
+    "march": {
+      "title": "Auf der Stelle marschieren",
+      "text": "Marschiere eine Minute in leichtem Tempo auf der Stelle, ruhe dich aus und wiederhole das."
+    },
+    "four-six": {
+      "title": "4 ein, 6 aus",
+      "text": "Steh aufrecht, atme bis vier zählend ein und bis sechs zählend aus. Zehn Runden."
+    },
+    "calf-stretch": {
+      "title": "Waden dehnen",
+      "text": "Hände an die Wand, einen Fuß nach hinten stellen, Ferse runter und sanft nach vorne lehnen. Wechsel."
+    },
+    "wake-stretch": {
+      "title": "Morgen-Dehnung",
+      "text": "Strecke dich wie gerade aufgewacht: Arme, Beine und Rücken, langsam, so wie es sich gut anfühlt."
+    },
+    "head-tilt": {
+      "title": "Ohr zur Schulter",
+      "text": "Neig den Kopf sanft zu einer Schulter, dann zur anderen. Beweg dich langsam."
+    }
+  }
+}

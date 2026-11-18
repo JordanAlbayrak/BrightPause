@@ -13,45 +13,51 @@
     <div class="status" id="status" aria-live="polite"></div>
   </header>
 
-  <section class="hero" aria-label="Today">
+  <section class="welcome" id="welcome" hidden>
+    <h1 data-i18n="welcome.title"></h1>
+    <p data-i18n="welcome.text"></p>
+    <button class="btn primary" id="welcome-ok" data-i18n="welcome.ok"></button>
+  </section>
+
+  <section class="hero" data-i18n-aria="hero.label">
     <div>
-      <div class="label">Breaks taken today</div>
+      <div class="label" data-i18n="hero.label"></div>
       <div class="big" id="taken">0</div>
       <div class="sub" id="today-sub"></div>
     </div>
-    <div class="week" id="week" aria-label="Breaks taken in the last 7 days"></div>
+    <div class="week" id="week" data-i18n-aria="hero.week"></div>
   </section>
   <div class="row-actions">
-    <button class="btn primary" data-action="break-now">Take a break now</button>
-    <button class="btn" id="resume" data-action="resume" hidden>Resume breaks</button>
+    <button class="btn primary" data-action="break-now" data-i18n="btn.break_now"></button>
+    <button class="btn" id="resume" data-action="resume" data-i18n="btn.resume" hidden></button>
   </div>
   <div class="row-actions pauses" id="pause">
-    <span>Pause</span>
-    <button class="btn" data-action="pause-30">30 min</button>
-    <button class="btn" data-action="pause-60">1 hour</button>
-    <button class="btn" data-action="pause-morning">Until tomorrow</button>
+    <span data-i18n="pause.label"></span>
+    <button class="btn" data-action="pause-30" data-i18n="pause.30"></button>
+    <button class="btn" data-action="pause-60" data-i18n="pause.60"></button>
+    <button class="btn" data-action="pause-morning" data-i18n="pause.morning"></button>
   </div>
 
   <section class="card">
-    <h2>Breaks</h2>
+    <h2 data-i18n="card.breaks"></h2>
     <div class="line">
-      <div class="what"><strong>Eye break every</strong><small>Look away from the screen</small></div>
+      <div class="what"><strong data-i18n="set.eye_every"></strong><small data-i18n="set.eye_every_sub"></small></div>
       <div class="stepper" data-key="mini_every_min" data-min="5" data-max="120" data-step="5" data-unit="min"></div>
     </div>
     <div class="line">
-      <div class="what"><strong>Eye break lasts</strong></div>
+      <div class="what"><strong data-i18n="set.eye_lasts"></strong></div>
       <div class="stepper" data-key="mini_length_sec" data-min="10" data-max="120" data-step="5" data-unit="sec"></div>
     </div>
     <div class="line">
-      <div class="what"><strong>Movement break</strong><small>Replaces one eye break in every few</small></div>
-      <div class="chips" role="radiogroup" aria-label="Movement break frequency">
-        <label><input type="radio" name="long_every_nth" value="2"><span>Every 2nd</span></label>
-        <label><input type="radio" name="long_every_nth" value="3"><span>Every 3rd</span></label>
-        <label><input type="radio" name="long_every_nth" value="4"><span>Every 4th</span></label>
+      <div class="what"><strong data-i18n="set.move"></strong><small data-i18n="set.move_sub"></small></div>
+      <div class="chips" role="radiogroup" data-i18n-aria="set.move">
+        <label><input type="radio" name="long_every_nth" value="2"><span data-i18n="set.move_2"></span></label>
+        <label><input type="radio" name="long_every_nth" value="3"><span data-i18n="set.move_3"></span></label>
+        <label><input type="radio" name="long_every_nth" value="4"><span data-i18n="set.move_4"></span></label>
       </div>
     </div>
     <div class="line">
-      <div class="what"><strong>Movement break lasts</strong></div>
+      <div class="what"><strong data-i18n="set.move_lasts"></strong></div>
       <div class="stepper" data-key="long_length_min" data-min="1" data-max="30" data-step="1" data-unit="min"></div>
     </div>
     <div class="line">
@@ -60,96 +66,116 @@
   </section>
 
   <section class="card">
-    <h2>During a break</h2>
+    <h2 data-i18n="card.during"></h2>
     <div class="line">
-      <div class="what"><strong>Warn me first</strong><small>A notification 10 to 30 seconds before</small></div>
-      <label class="switch"><input type="checkbox" data-key="heads_up" aria-label="Warn me first"><span></span></label>
+      <div class="what"><strong data-i18n="set.heads_up"></strong><small data-i18n="set.heads_up_sub"></small></div>
+      <label class="switch"><input type="checkbox" data-key="heads_up" data-i18n-aria="set.heads_up"><span></span></label>
     </div>
     <div class="line">
-      <div class="what"><strong>Allow postponing once</strong><small>2 minutes for eye breaks, 5 for movement</small></div>
-      <label class="switch"><input type="checkbox" data-key="allow_postpone" aria-label="Allow postponing once"><span></span></label>
+      <div class="what"><strong data-i18n="set.postpone"></strong><small data-i18n="set.postpone_sub"></small></div>
+      <label class="switch"><input type="checkbox" data-key="allow_postpone" data-i18n-aria="set.postpone"><span></span></label>
     </div>
     <div class="line">
-      <div class="what"><strong>Strict mode</strong><small>No skipping or postponing</small></div>
-      <label class="switch"><input type="checkbox" data-key="strict" aria-label="Strict mode"><span></span></label>
+      <div class="what"><strong data-i18n="set.calls"></strong><small data-i18n="set.calls_sub"></small></div>
+      <label class="switch"><input type="checkbox" data-key="pause_in_calls" data-i18n-aria="set.calls"><span></span></label>
     </div>
     <div class="line">
-      <div class="what"><strong>Cover all screens</strong></div>
-      <label class="switch"><input type="checkbox" data-key="all_screens" aria-label="Cover all screens"><span></span></label>
+      <div class="what"><strong data-i18n="set.strict"></strong><small data-i18n="set.strict_sub"></small></div>
+      <label class="switch"><input type="checkbox" data-key="strict" data-i18n-aria="set.strict"><span></span></label>
     </div>
     <div class="line">
-      <div class="what"><strong>Sound</strong></div>
-      <div class="chips" role="radiogroup" aria-label="Sound">
-        <label><input type="radio" name="sound" value="chime"><span>Chime</span></label>
-        <label><input type="radio" name="sound" value="bell"><span>Bell</span></label>
-        <label><input type="radio" name="sound" value="soft"><span>Soft</span></label>
-        <label><input type="radio" name="sound" value="none"><span>Off</span></label>
+      <div class="what"><strong data-i18n="set.all_screens"></strong></div>
+      <label class="switch"><input type="checkbox" data-key="all_screens" data-i18n-aria="set.all_screens"><span></span></label>
+    </div>
+    <div class="line">
+      <div class="what"><strong data-i18n="set.sound"></strong></div>
+      <div class="chips" role="radiogroup" data-i18n-aria="set.sound">
+        <label><input type="radio" name="sound" value="chime"><span data-i18n="sound.chime"></span></label>
+        <label><input type="radio" name="sound" value="bell"><span data-i18n="sound.bell"></span></label>
+        <label><input type="radio" name="sound" value="soft"><span data-i18n="sound.soft"></span></label>
+        <label><input type="radio" name="sound" value="none"><span data-i18n="sound.none"></span></label>
       </div>
     </div>
     <div class="line">
-      <div class="what"><strong>Volume</strong></div>
-      <div><input type="range" min="0" max="1" step="0.05" data-key="volume" aria-label="Volume"> <button class="btn quiet" id="test-sound">Play</button></div>
+      <div class="what"><strong data-i18n="set.volume"></strong></div>
+      <div><input type="range" min="0" max="1" step="0.05" data-key="volume" data-i18n-aria="set.volume"> <button class="btn quiet" id="test-sound" data-i18n="btn.play"></button></div>
     </div>
   </section>
 
   <section class="card">
-    <h2>Break screen</h2>
+    <h2 data-i18n="card.screen"></h2>
     <div class="line col">
-      <div class="what"><strong>Background</strong><small>The side screens match it</small></div>
-      <div class="tiles" id="tiles" role="radiogroup" aria-label="Background"></div>
+      <div class="what"><strong data-i18n="set.background"></strong><small data-i18n="set.background_sub"></small></div>
+      <div class="tiles" id="tiles" role="radiogroup" data-i18n-aria="set.background"></div>
       <input type="file" id="image-file" accept="image/jpeg,image/png,image/webp" hidden>
     </div>
   </section>
 
   <section class="card">
-    <h2>Fitting into your day</h2>
+    <h2 data-i18n="card.day"></h2>
     <div class="line">
-      <div class="what"><strong>Away counts as a break after</strong><small>The timer starts over when you come back</small></div>
+      <div class="what"><strong data-i18n="set.away"></strong><small data-i18n="set.away_sub"></small></div>
       <div class="stepper" data-key="idle_reset_min" data-min="1" data-max="30" data-step="1" data-unit="min"></div>
     </div>
     <div class="line">
-      <div class="what"><strong>Start with Windows</strong></div>
-      <label class="switch"><input type="checkbox" data-key="start_at_login" aria-label="Start with Windows"><span></span></label>
+      <div class="what"><strong data-i18n="set.start_windows"></strong></div>
+      <label class="switch"><input type="checkbox" data-key="start_at_login" data-i18n-aria="set.start_windows"><span></span></label>
     </div>
     <div class="line">
-      <div class="what"><strong>Appearance</strong></div>
-      <div class="chips" role="radiogroup" aria-label="Appearance">
-        <label><input type="radio" name="theme" value="system"><span>System</span></label>
-        <label><input type="radio" name="theme" value="light"><span>Light</span></label>
-        <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+      <div class="what"><strong data-i18n="set.appearance"></strong></div>
+      <div class="chips" role="radiogroup" data-i18n-aria="set.appearance">
+        <label><input type="radio" name="theme" value="system"><span data-i18n="theme.system"></span></label>
+        <label><input type="radio" name="theme" value="light"><span data-i18n="theme.light"></span></label>
+        <label><input type="radio" name="theme" value="dark"><span data-i18n="theme.dark"></span></label>
       </div>
     </div>
     <div class="line">
-      <div class="what"><strong>Shortcuts</strong><small>Ctrl+Alt+B break now · Ctrl+Alt+P pause 1 hour or resume · Ctrl+Alt+S skip</small></div>
+      <div class="what"><strong data-i18n="set.language"></strong><small data-i18n="set.language_sub"></small></div>
+      <select class="select" id="language" data-i18n-aria="set.language"></select>
+    </div>
+    <div class="line">
+      <div class="what"><strong data-i18n="set.shortcuts"></strong><small data-i18n="set.shortcuts_sub"></small></div>
+    </div>
+    <div class="line">
+      <div class="what"><span data-i18n="short.break_now"></span></div>
+      <div class="hotkey"><button class="btn keys" data-hotkey="break_now"></button><label class="switch"><input type="checkbox" data-hotkey-on="break_now" data-i18n-aria="short.break_now"><span></span></label></div>
+    </div>
+    <div class="line">
+      <div class="what"><span data-i18n="short.pause"></span></div>
+      <div class="hotkey"><button class="btn keys" data-hotkey="pause"></button><label class="switch"><input type="checkbox" data-hotkey-on="pause" data-i18n-aria="short.pause"><span></span></label></div>
+    </div>
+    <div class="line">
+      <div class="what"><span data-i18n="short.skip"></span></div>
+      <div class="hotkey"><button class="btn keys" data-hotkey="skip"></button><label class="switch"><input type="checkbox" data-hotkey-on="skip" data-i18n-aria="short.skip"><span></span></label></div>
     </div>
   </section>
 
   <section class="card">
-    <h2>Updates</h2>
+    <h2 data-i18n="card.updates"></h2>
     <div class="line" id="update-available" hidden>
       <div class="what"><strong id="update-title"></strong><small id="update-notes"></small></div>
-      <button class="btn primary" id="install-update">Install</button>
+      <button class="btn primary" id="install-update" data-i18n="btn.install"></button>
     </div>
     <div class="line">
-      <div class="what"><strong id="version">BrightPause</strong><small id="update-status">BrightPause never goes online unless you ask it to.</small></div>
-      <button class="btn" id="check-updates">Check for updates</button>
+      <div class="what"><strong id="version">BrightPause</strong><small id="update-status"></small></div>
+      <button class="btn" id="check-updates" data-i18n="btn.check"></button>
     </div>
     <div class="line">
-      <div class="what"><strong>Automatic updates</strong><small>Checks at most once a day</small></div>
-      <label class="switch"><input type="checkbox" data-key="auto_update" aria-label="Automatic updates"><span></span></label>
+      <div class="what"><strong data-i18n="set.auto_update"></strong><small data-i18n="set.auto_update_sub"></small></div>
+      <label class="switch"><input type="checkbox" data-key="auto_update" data-i18n-aria="set.auto_update"><span></span></label>
     </div>
   </section>
 
   <section class="card">
-    <h2>Why these breaks</h2>
+    <h2 data-i18n="card.why"></h2>
     <div class="sources">
-      Every eye break rests your focus on something far away; every few breaks, you stand and move. The tips come from:
+      <span data-i18n="why.intro"></span>
       <ul>
-        <li><a href="https://www.aoa.org/healthy-eyes/eye-and-vision-conditions/computer-vision-syndrome" target="_blank" rel="noopener">American Optometric Association: the 20-20-20 rule</a></li>
-        <li><a href="https://www.aao.org/eye-health/tips-prevention/computer-usage" target="_blank" rel="noopener">American Academy of Ophthalmology: computers and eye strain</a></li>
-        <li><a href="https://doi.org/10.1371/journal.pone.0272460" target="_blank" rel="noopener">Albulescu et al. 2022, micro-breaks and well-being (PLOS ONE)</a></li>
-        <li><a href="https://pubmed.ncbi.nlm.nih.gov/22374636/" target="_blank" rel="noopener">Dunstan et al. 2012, breaking up sitting (Diabetes Care)</a></li>
-        <li><a href="https://www.ccohs.ca/oshanswers/ergonomics/sitting/sitting_overview.html" target="_blank" rel="noopener">Canadian Centre for Occupational Health and Safety: working while sitting</a></li>
+        <li><a href="https://www.aoa.org/healthy-eyes/eye-and-vision-conditions/computer-vision-syndrome" target="_blank" rel="noopener" data-i18n="src.aoa"></a></li>
+        <li><a href="https://www.aao.org/eye-health/tips-prevention/computer-usage" target="_blank" rel="noopener" data-i18n="src.aao"></a></li>
+        <li><a href="https://doi.org/10.1371/journal.pone.0272460" target="_blank" rel="noopener" data-i18n="src.albulescu"></a></li>
+        <li><a href="https://pubmed.ncbi.nlm.nih.gov/22374636/" target="_blank" rel="noopener" data-i18n="src.dunstan"></a></li>
+        <li><a href="https://www.ccohs.ca/oshanswers/ergonomics/sitting/sitting_overview.html" target="_blank" rel="noopener" data-i18n="src.ccohs"></a></li>
       </ul>
     </div>
   </section>

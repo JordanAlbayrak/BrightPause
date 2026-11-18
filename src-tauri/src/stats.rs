@@ -58,7 +58,7 @@ pub fn summary(path: &Path, today: Date) -> Summary {
         .rev()
         .map(|i| {
             let d = today - Span::new().days(i);
-            (d.strftime("%a").to_string(), taken_on(d))
+            (d.to_string(), taken_on(d))
         })
         .collect();
     s

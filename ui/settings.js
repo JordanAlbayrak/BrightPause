@@ -1,5 +1,6 @@
 import { play } from './sound.js';
 import { COLORS, paint, loadImage } from './backgrounds.js';
+import { t, lang, languages, loadStrings } from './i18n.js';
 
 const { invoke } = window.__TAURI__.core;
 const $ = (id) => document.getElementById(id);
@@ -17,8 +18,7 @@ function toast(text, error = false) {
 }
 
 function unitText(value, unit) {
-  if (unit === 'sec') return `${value} sec`;
-  return value === 1 ? '1 min' : `${value} min`;
+  return t(unit === 'sec' ? 'unit.sec' : 'unit.min', { n: value });
 }
 
 function applyTheme() {
@@ -29,8 +29,10 @@ function applyTheme() {
 function cadence() {
   const n = settings.long_every_nth;
   const every = settings.mini_every_min * n;
-  const hours = every === 60 ? 'hour' : every % 60 === 0 ? `${every / 60} hours` : `${every} minutes`;
-  $('cadence').textContent = `So: a ${settings.mini_length_sec}-second eye break every ${settings.mini_every_min} minutes, and a ${settings.long_length_min}-minute movement break about every ${hours}.`;
+  const vars = { sec: settings.mini_length_sec, every: settings.mini_every_min, len: settings.long_length_min };
+  if (every === 60) $('cadence').textContent = t('cadence.hour', vars);
+  else if (every % 60 === 0) $('cadence').textContent = t('cadence.hours', { ...vars, n: every / 60 });
+  else $('cadence').textContent = t('cadence.minutes', { ...vars, n: every });
 }
 
 function render() {
@@ -40,9 +42,75 @@ function render() {
   for (const el of document.querySelectorAll('input[type="checkbox"][data-key]')) el.checked = settings[el.dataset.key];
   for (const el of document.querySelectorAll('input[type="radio"]')) el.checked = String(settings[el.name]) === el.value;
   document.querySelector('input[data-key="volume"]').value = settings.volume;
+  $('language').value = settings.language;
   document.querySelector('input[data-key="allow_postpone"]').disabled = settings.strict;
   applyTheme();
   cadence();
+  renderHotkeys();
+}
+
+let recording = null;
+
+function keysLabel(keys) {
+  const names = { Ctrl: t('key.ctrl'), Shift: t('key.shift'), Alt: t('key.alt') };
+  return keys.split('+').map((k) => names[k] ?? k).join('+');
+}
+
+function renderHotkeys() {
+  for (const b of document.querySelectorAll('[data-hotkey]')) {
+    if (b !== recording) b.textContent = keysLabel(settings.shortcuts[b.dataset.hotkey].keys);
+  }
+  for (const c of document.querySelectorAll('[data-hotkey-on]')) c.checked = settings.shortcuts[c.dataset.hotkeyOn].on;
+}
+
+function clashes(name, keys) {
+  return Object.entries(settings.shortcuts).some(([n, h]) => n !== name && h.on && h.keys.toLowerCase() === keys.toLowerCase());
+}
+
+function stopRecording(saved) {
+  recording.classList.remove('recording');
+  recording = null;
+  renderHotkeys();
+  if (!saved) invoke('resume_hotkeys');
+}
+
+function buildHotkeys() {
+  for (const b of document.querySelectorAll('[data-hotkey]')) {
+    b.addEventListener('click', async () => {
+      if (recording) stopRecording(false);
+      await invoke('suspend_hotkeys');
+      recording = b;
+      b.classList.add('recording');
+      b.textContent = t('short.press');
+    });
+  }
+  for (const c of document.querySelectorAll('[data-hotkey-on]')) {
+    c.addEventListener('change', () => {
+      const name = c.dataset.hotkeyOn;
+      if (c.checked && clashes(name, settings.shortcuts[name].keys)) {
+        c.checked = false;
+        toast(t('short.duplicate', { keys: keysLabel(settings.shortcuts[name].keys) }), true);
+        return;
+      }
+      settings.shortcuts[name].on = c.checked;
+      save();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (!recording) return;
+    e.preventDefault();
+    if (e.key === 'Escape') return stopRecording(false);
+    if (['Control', 'Alt', 'Shift', 'Meta', 'OS'].includes(e.key)) return;
+    const mods = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift'].filter(Boolean);
+    if (!mods.length) return toast(t('short.need_modifier'), true);
+    const keys = [...mods, e.code.replace(/^Key|^Digit/, '')].join('+');
+    const name = recording.dataset.hotkey;
+    if (clashes(name, keys)) return toast(t('short.duplicate', { keys: keysLabel(keys) }), true);
+    settings.shortcuts[name].keys = keys;
+    settings.shortcuts[name].on = true;
+    stopRecording(true);
+    save();
+  });
 }
 
 function save() {
@@ -50,7 +118,7 @@ function save() {
     try {
       settings = await invoke('save_settings', { settings });
       render();
-      toast('Saved');
+      toast(t('toast.saved'));
       refresh();
     } catch (e) {
       toast(String(e), true);
@@ -69,8 +137,8 @@ function buildSteppers() {
     const out = document.createElement('output');
     minus.textContent = '−';
     plus.textContent = '+';
-    minus.setAttribute('aria-label', `Less ${key.replace(/_/g, ' ')}`);
-    plus.setAttribute('aria-label', `More ${key.replace(/_/g, ' ')}`);
+    minus.setAttribute('aria-label', t('aria.less'));
+    plus.setAttribute('aria-label', t('aria.more'));
     const change = (dir) => {
       const v = settings[key];
       const next = dir > 0 ? Math.min(max, (Math.floor(v / step) + 1) * step) : Math.max(min, (Math.ceil(v / step) - 1) * step);
@@ -95,9 +163,9 @@ async function storedImage() {
 async function buildTiles() {
   const img = await storedImage();
   const options = [
-    ['theme', 'Theme'],
-    ...COLORS.map(([c, name]) => [`color:${c}`, name]),
-    ['image', img ? 'Your image' : 'Add image'],
+    ['theme', t('tile.theme')],
+    ...COLORS.map(([c, name]) => [`color:${c}`, t(`color.${name.toLowerCase()}`)]),
+    ['image', t(img ? 'tile.your_image' : 'tile.add_image')],
   ];
   $('tiles').replaceChildren(...options.map(([value, name]) => {
     const tile = document.createElement('label');
@@ -156,12 +224,12 @@ async function pickImage() {
     await buildTiles();
     save();
   } catch (e) {
-    toast('That image could not be used.', true);
+    toast(t('err.image'), true);
   }
 }
 
 function when(seconds) {
-  return new Date(seconds * 1000).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  return new Date(seconds * 1000).toLocaleString(lang, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 }
 
 function renderUpdate(u) {
@@ -169,16 +237,16 @@ function renderUpdate(u) {
   if (u.state === 'available') {
     const dot = document.createElement('span');
     dot.className = 'update-dot';
-    $('update-title').replaceChildren(dot, `Version ${u.version} available`);
-    $('update-notes').textContent = u.notes || 'A newer BrightPause is ready to install.';
+    $('update-title').replaceChildren(dot, t('update.available', { v: u.version }));
+    $('update-notes').textContent = u.notes || t('update.notes_default');
   }
   const text = {
-    checking: 'Checking...',
-    installing: 'Installing. BrightPause will restart.',
-    none: `You have the latest version (checked ${when(u.checked_at)}).`,
-    error: `Could not check: ${u.message}`,
-    unconfigured: u.message,
-  }[u.state] || (u.checked_at ? `Last checked ${when(u.checked_at)}.` : 'BrightPause never goes online unless you ask it to.');
+    checking: t('update.checking'),
+    installing: t('update.installing'),
+    none: t('update.latest', { when: when(u.checked_at) }),
+    error: t('update.error', { msg: u.message }),
+    unconfigured: t('update.unconfigured'),
+  }[u.state] || (u.checked_at ? t('update.last', { when: when(u.checked_at) }) : t('update.offline'));
   $('update-status').textContent = text;
   $('check-updates').disabled = u.state === 'checking' || u.state === 'installing';
   if (u.state === 'checking' || u.state === 'installing') setTimeout(refresh, 800);
@@ -192,23 +260,44 @@ async function refresh() {
   $('resume').hidden = !st.paused;
   $('taken').textContent = st.stats.taken;
   const parts = [];
-  if (st.stats.skipped) parts.push(`${st.stats.skipped} skipped`);
-  if (st.stats.postponed) parts.push(`${st.stats.postponed} postponed`);
-  if (st.stats.streak_days > 1) parts.push(`${st.stats.streak_days}-day streak`);
-  $('today-sub').textContent = parts.join(' · ') || (st.stats.taken ? 'Nicely done.' : 'Your first break is on its way.');
+  if (st.stats.skipped) parts.push(t('today.skipped', { n: st.stats.skipped }));
+  if (st.stats.postponed) parts.push(t('today.postponed', { n: st.stats.postponed }));
+  if (st.stats.streak_days > 1) parts.push(t('today.streak', { n: st.stats.streak_days }));
+  $('today-sub').textContent = parts.join(' · ') || t(st.stats.taken ? 'today.nice' : 'today.first');
   const max = Math.max(1, ...st.stats.week.map(([, n]) => n));
   $('week').replaceChildren(...st.stats.week.map(([day, n]) => {
     const col = document.createElement('div');
     const bar = document.createElement('i');
     bar.style.height = `${Math.round((n / max) * 44) + 3}px`;
-    col.title = `${day}: ${n}`;
-    col.append(bar, day.slice(0, 2));
+    const [y, m, d] = day.split('-').map(Number);
+    const name = new Date(y, m - 1, d).toLocaleDateString(lang, { weekday: 'short' }).replace('.', '');
+    col.title = `${name}: ${n}`;
+    col.append(bar, name.charAt(0).toUpperCase() + name.slice(1, 2));
     return col;
   }));
 }
 
+function buildLanguages() {
+  const sel = $('language');
+  sel.replaceChildren(...[['system', t('lang.system')], ...languages].map(([value, name]) => new Option(name, value)));
+  sel.addEventListener('change', async () => {
+    settings.language = sel.value;
+    save();
+    await saving;
+    location.reload();
+  });
+}
+
 async function main() {
+  await loadStrings();
+  if (await invoke('take_welcome')) {
+    $('welcome').hidden = false;
+    requestAnimationFrame(() => scrollTo(0, 0));
+    $('welcome-ok').addEventListener('click', () => { $('welcome').hidden = true; });
+  }
+  buildLanguages();
   buildSteppers();
+  buildHotkeys();
   settings = await invoke('get_settings');
   render();
   requestAnimationFrame(() => document.body.classList.add('ready'));
@@ -237,6 +326,7 @@ async function main() {
   }
   await refresh();
   await buildTiles();
+  if (!$('welcome').hidden) scrollTo(0, 0);
   setInterval(refresh, 5000);
 }
 

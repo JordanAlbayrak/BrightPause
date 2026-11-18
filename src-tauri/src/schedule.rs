@@ -322,6 +322,21 @@ mod tests {
     }
 
     #[test]
+    fn postpone_limit_two_allows_two_snoozes_then_no_more() {
+        let mut s = Scheduler::new(Timing { postpone_limit: 2, ..Timing::default() }, 0.0);
+        let ev = run(&mut s, 0.0, 1200.0);
+        assert_eq!(ev.last(), Some(&Event::BreakStarted { kind: Kind::Mini, length: 20.0, can_postpone: true }));
+        assert!(!s.end_break(1201.0, Outcome::Postponed).is_empty());
+        let ev = run(&mut s, 1202.0, 1321.0);
+        assert_eq!(started(&ev), vec![Kind::Mini]);
+        assert_eq!(ev.last(), Some(&Event::BreakStarted { kind: Kind::Mini, length: 20.0, can_postpone: true }));
+        assert!(!s.end_break(1322.0, Outcome::Postponed).is_empty());
+        let ev = run(&mut s, 1323.0, 1442.0);
+        assert_eq!(ev.last(), Some(&Event::BreakStarted { kind: Kind::Mini, length: 20.0, can_postpone: false }));
+        assert!(s.end_break(1443.0, Outcome::Postponed).is_empty());
+    }
+
+    #[test]
     fn postpone_once_then_not_again() {
         let mut s = Scheduler::new(Timing::default(), 0.0);
         run(&mut s, 0.0, 1200.0);

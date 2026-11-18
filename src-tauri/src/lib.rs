@@ -1,5 +1,7 @@
 mod content;
 mod dim;
+mod i18n;
+mod meeting;
 mod idle;
 mod schedule;
 mod settings;
@@ -15,7 +17,7 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder, Wry};
 use tauri_plugin_autostart::ManagerExt;
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri_plugin_notification::NotificationExt;
 
 use content::{Item, Rotation};
@@ -28,10 +30,14 @@ fn now() -> f64 {
     SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs_f64()
 }
 
-fn label(kind: Kind) -> &'static str {
+fn lang_of(settings: &Settings) -> &'static str {
+    i18n::resolve(&settings.language)
+}
+
+fn kind_key(kind: Kind) -> &'static str {
     match kind {
-        Kind::Mini => "Short break",
-        Kind::Long => "Movement break",
+        Kind::Mini => "kind.short",
+        Kind::Long => "kind.long",
     }
 }
 
@@ -48,6 +54,7 @@ struct BreakInfo {
     volume: f32,
     theme: String,
     background: String,
+    lang: String,
 }
 
 struct Inner {
@@ -55,6 +62,7 @@ struct Inner {
     settings: Settings,
     rotation: Rotation,
     current: Option<BreakInfo>,
+    in_call: bool,
 }
 
 struct TrayItems {
@@ -89,13 +97,13 @@ fn handle(app: &AppHandle, events: Vec<Event>) {
     for event in events {
         match event {
             Event::HeadsUp { kind, seconds } => {
-                if state.inner.lock().unwrap().settings.heads_up {
-                    let _ = app
-                        .notification()
-                        .builder()
-                        .title(format!("{} in {} seconds", label(kind), seconds))
-                        .body("Finish your sentence; BrightPause will take over the screen.")
-                        .show();
+                let (heads_up, lang) = {
+                    let inner = state.inner.lock().unwrap();
+                    (inner.settings.heads_up, lang_of(&inner.settings))
+                };
+                if heads_up {
+                    let title = i18n::fmt(lang, "notify.title", &[("kind", &i18n::t(lang, kind_key(kind))), ("n", &seconds.to_string())]);
+                    let _ = app.notification().builder().title(title).body(i18n::t(lang, "notify.body")).show();
                 }
             }
             Event::BreakStarted { kind, length, can_postpone } => {
@@ -103,18 +111,20 @@ fn handle(app: &AppHandle, events: Vec<Event>) {
                     let mut inner = state.inner.lock().unwrap();
                     let item = inner.rotation.pick(kind);
                     let s = inner.settings.clone();
+                    let lang = lang_of(&s);
                     inner.current = Some(BreakInfo {
                         kind,
-                        label: item.label().into(),
+                        label: i18n::t(lang, item.label_key()),
                         length,
                         ends_at_ms: (now() + length) * 1000.0,
-                        item,
+                        item: i18n::tip(lang, &item),
                         can_postpone,
                         can_skip: !s.strict,
                         sound: s.sound.clone(),
                         volume: s.volume,
                         theme: s.theme.clone(),
                         background: s.background.clone(),
+                        lang: lang.into(),
                     });
                     s.all_screens
                 };
@@ -191,29 +201,50 @@ fn open_settings(app: &AppHandle) {
         let _ = w.set_focus();
         return;
     }
-    let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
+    let built = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
         .title("BrightPause")
         .additional_browser_args(BROWSER_ARGS)
         .inner_size(720.0, 760.0)
         .min_inner_size(520.0, 560.0)
         .center()
+        .focused(true)
         .on_new_window(open_in_browser)
         .build();
+    if let Ok(w) = built {
+        // Windows may refuse focus to a window opened by a background thread; float it above the
+        // others for a few seconds so the first-run welcome is seen.
+        let _ = w.set_always_on_top(true);
+        let _ = w.set_focus();
+        if !w.is_focused().unwrap_or(true) {
+            let _ = w.request_user_attention(Some(tauri::UserAttentionType::Informational));
+        }
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_secs(3));
+            let _ = w.set_always_on_top(false);
+        });
+    }
 }
 
 fn status_text(inner: &Inner, t: f64) -> (String, bool) {
+    let lang = lang_of(&inner.settings);
+    let per_kind = |kind: Kind, mini: &str, long: &str| match kind {
+        Kind::Mini => mini.to_string(),
+        Kind::Long => long.to_string(),
+    };
     match inner.sched.phase {
+        Phase::Working { .. } if inner.in_call => (i18n::t(lang, "status.in_call"), false),
         Phase::Working { .. } => {
             let (kind, secs) = inner.sched.seconds_to_next(t).unwrap();
-            let when = if secs < 60.0 { "in under a minute".to_string() } else { format!("in {} min", (secs / 60.0).ceil() as u32) };
-            (format!("Next: {} {}", label(kind).to_lowercase(), when), false)
+            let when = if secs < 60.0 { i18n::t(lang, "status.soon") } else { i18n::fmt(lang, "status.in_min", &[("n", &((secs / 60.0).ceil() as u32).to_string())]) };
+            (i18n::fmt(lang, &per_kind(kind, "status.next_mini", "status.next_long"), &[("when", &when)]), false)
         }
-        Phase::Break { kind, .. } => (format!("On a {}", label(kind).to_lowercase()), false),
+        Phase::Break { kind, .. } => (i18n::t(lang, &per_kind(kind, "status.on_mini", "status.on_long")), false),
         Phase::Paused { until: Some(until) } => {
-            let local = jiff::Timestamp::from_second(until as i64).map(|t| t.to_zoned_datetime(jiff::tz::TimeZone::system()).strftime("%-I:%M %p").to_string()).unwrap_or_default();
-            (format!("Paused until {local}"), true)
+            let format = i18n::t(lang, "time_format");
+            let local = jiff::Timestamp::from_second(until as i64).map(|t| t.to_zoned_datetime(jiff::tz::TimeZone::system()).strftime(&format).to_string()).unwrap_or_default();
+            (i18n::fmt(lang, "status.paused_until", &[("time", &local)]), true)
         }
-        Phase::Paused { until: None } => ("Paused".into(), true),
+        Phase::Paused { until: None } => (i18n::t(lang, "status.paused"), true),
     }
 }
 
@@ -224,7 +255,7 @@ fn update_tray(app: &AppHandle) {
     let mut tray = state.tray.lock().unwrap();
     if let Some(t) = tray.as_mut() {
         if t.dot != dot {
-            let _ = t.tray.set_icon(Some(tray_icon(app, dot)));
+            let _ = t.tray.set_icon(Some(tray_icon(dot)));
             t.dot = dot;
         }
         if t.last_text != text {
@@ -311,8 +342,9 @@ fn apply_autostart(app: &AppHandle, on: bool) {
 // services in the background whenever a web view is open.
 const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,msOneAuthWAM,msForceOneAuthWAM --disable-background-networking --disable-component-update --disable-domain-reliability --disable-sync --no-pings --no-proxy-server";
 
-fn tray_icon(app: &AppHandle, dot: bool) -> tauri::image::Image<'static> {
-    let base = app.default_window_icon().unwrap();
+fn tray_icon(dot: bool) -> tauri::image::Image<'static> {
+    // Plain ring and pause bars: the sun's rays blur at tray size.
+    let base = tauri::include_image!("icons/tray.png");
     let (w, h) = (base.width(), base.height());
     let mut rgba = base.rgba().to_vec();
     if dot {
@@ -419,6 +451,32 @@ async fn end_break(app: AppHandle, outcome: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn get_strings(state: tauri::State<AppState>) -> i18n::Strings {
+    i18n::strings(lang_of(&state.inner.lock().unwrap().settings))
+}
+
+// Set on the first run after install: the settings page then opens with a short welcome.
+static WELCOME: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[tauri::command]
+fn take_welcome() -> bool {
+    WELCOME.swap(false, std::sync::atomic::Ordering::Relaxed)
+}
+
+// While settings records a new key combination, the current shortcuts must not fire.
+#[tauri::command]
+fn suspend_hotkeys(app: AppHandle) {
+    let _ = app.global_shortcut().unregister_all();
+    ACTIVE.lock().unwrap().clear();
+}
+
+#[tauri::command]
+fn resume_hotkeys(app: AppHandle) {
+    let shortcuts = app.state::<AppState>().inner.lock().unwrap().settings.shortcuts.clone();
+    apply_hotkeys(&app, &shortcuts);
+}
+
+#[tauri::command]
 fn get_settings(state: tauri::State<AppState>) -> Settings {
     state.inner.lock().unwrap().settings.clone()
 }
@@ -427,6 +485,15 @@ fn get_settings(state: tauri::State<AppState>) -> Settings {
 async fn save_settings(app: AppHandle, settings: Settings) -> Result<Settings, String> {
     settings.validate()?;
     let state = app.state::<AppState>();
+    let old = state.inner.lock().unwrap().settings.clone();
+    if old.shortcuts != settings.shortcuts {
+        // Report only keys that are new: one that already failed at startup should not block other changes.
+        let was_on = |k: &String| old.shortcuts.all().iter().any(|(_, h)| h.on && &h.keys == k);
+        if let Some(keys) = apply_hotkeys(&app, &settings.shortcuts).into_iter().find(|k| !was_on(k)) {
+            apply_hotkeys(&app, &old.shortcuts);
+            return Err(i18n::fmt(lang_of(&settings), "short.taken", &[("keys", &keys)]));
+        }
+    }
     settings.save(&state.settings_path()).map_err(|e| e.to_string())?;
     {
         let mut inner = state.inner.lock().unwrap();
@@ -434,6 +501,9 @@ async fn save_settings(app: AppHandle, settings: Settings) -> Result<Settings, S
         inner.settings = settings.clone();
     }
     apply_autostart(&app, settings.start_at_login);
+    if old.language != settings.language || old.shortcuts != settings.shortcuts {
+        rebuild_menu(&app, &settings);
+    }
     update_tray(&app);
     Ok(settings)
 }
@@ -458,38 +528,53 @@ async fn do_action(app: AppHandle, id: String) {
     act(&app, &id);
 }
 
-fn build_tray(app: &AppHandle) -> tauri::Result<TrayItems> {
-    let status = MenuItem::with_id(app, "status", "Starting...", false, None::<&str>)?;
-    let resume = MenuItem::with_id(app, "resume", "Resume breaks", false, None::<&str>)?;
-    let more = Submenu::with_items(
-        app,
-        "Pause for longer",
-        true,
-        &[
-            &MenuItem::with_id(app, "pause-120", "For 2 hours", true, None::<&str>)?,
-            &MenuItem::with_id(app, "pause-forever", "Until I resume", true, None::<&str>)?,
-        ],
-    )?;
+type TrayMenu = (Menu<Wry>, MenuItem<Wry>, MenuItem<Wry>);
+
+fn build_menu(app: &AppHandle, settings: &Settings) -> tauri::Result<TrayMenu> {
+    let lang = lang_of(settings);
+    let tr = |key: &str| i18n::t(lang, key);
+    let sc = &settings.shortcuts;
+    let accel = |h: &settings::Hotkey| if h.on { Some(h.keys.clone()) } else { None };
+    let item = |id: &str, key: &str, accel: Option<String>| MenuItem::with_id(app, id, tr(key), true, accel);
+    let status = MenuItem::with_id(app, "status", tr("status.starting"), false, None::<&str>)?;
+    let resume = MenuItem::with_id(app, "resume", tr("tray.resume"), false, None::<&str>)?;
+    let more = Submenu::with_items(app, tr("tray.pause_more"), true, &[&item("pause-120", "tray.pause_120", None)?, &item("pause-forever", "tray.pause_forever", None)?])?;
     let menu = Menu::with_items(
         app,
         &[
             &status,
             &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(app, "break-now", "Take a break now", true, Some("Ctrl+Alt+B"))?,
-            &MenuItem::with_id(app, "reset", "Restart the timer", true, None::<&str>)?,
+            &item("break-now", "tray.break_now", accel(&sc.break_now))?,
+            &item("reset", "tray.reset", None)?,
             &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(app, "pause-30", "Pause for 30 minutes", true, None::<&str>)?,
-            &MenuItem::with_id(app, "pause-60", "Pause for 1 hour", true, Some("Ctrl+Alt+P"))?,
-            &MenuItem::with_id(app, "pause-morning", "Pause until tomorrow", true, None::<&str>)?,
+            &item("pause-30", "tray.pause_30", None)?,
+            &item("pause-60", "tray.pause_60", accel(&sc.pause))?,
+            &item("pause-morning", "tray.pause_morning", None)?,
             &more,
             &resume,
             &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(app, "settings", "Settings and stats...", true, None::<&str>)?,
-            &MenuItem::with_id(app, "quit", "Quit BrightPause", true, None::<&str>)?,
+            &item("settings", "tray.settings", None)?,
+            &item("quit", "tray.quit", None)?,
         ],
     )?;
+    Ok((menu, status, resume))
+}
+
+fn rebuild_menu(app: &AppHandle, settings: &Settings) {
+    let state = app.state::<AppState>();
+    let mut tray = state.tray.lock().unwrap();
+    if let (Some(t), Ok((menu, status, resume))) = (tray.as_mut(), build_menu(app, settings)) {
+        let _ = t.tray.set_menu(Some(menu));
+        t.status = status;
+        t.resume = resume;
+        t.last_text.clear();
+    }
+}
+
+fn build_tray(app: &AppHandle, settings: &Settings) -> tauri::Result<TrayItems> {
+    let (menu, status, resume) = build_menu(app, settings)?;
     let tray = TrayIconBuilder::with_id("main")
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(tray_icon(false))
         .tooltip("BrightPause")
         .menu(&menu)
         .show_menu_on_left_click(true)
@@ -513,14 +598,15 @@ fn migrate_old_data(dir: &std::path::Path) {
     }
 }
 
-const HOTKEYS: [(Code, &str); 3] = [(Code::KeyB, "break-now"), (Code::KeyP, "pause-toggle"), (Code::KeyS, "skip")];
+// The shortcuts registered right now, and the action each one runs.
+static ACTIVE: Mutex<Vec<(Shortcut, &'static str)>> = Mutex::new(Vec::new());
 
-fn register_hotkeys(app: &AppHandle) {
-    let hotkey = |code| Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), code);
+fn register_hotkeys(app: &AppHandle, shortcuts: &settings::Shortcuts) {
     let plugin = tauri_plugin_global_shortcut::Builder::new()
-        .with_handler(move |app, shortcut, event| {
+        .with_handler(|app, shortcut, event| {
             if event.state() == ShortcutState::Pressed {
-                if let Some((_, id)) = HOTKEYS.iter().find(|(code, _)| hotkey(*code) == *shortcut) {
+                let id = ACTIVE.lock().unwrap().iter().find(|(s, _)| s == shortcut).map(|(_, id)| *id);
+                if let Some(id) = id {
                     act(app, id);
                 }
             }
@@ -530,11 +616,28 @@ fn register_hotkeys(app: &AppHandle) {
         eprintln!("hotkeys unavailable: {e}");
         return;
     }
-    for (code, _) in HOTKEYS {
-        if let Err(e) = app.global_shortcut().register(hotkey(code)) {
-            eprintln!("hotkey {code:?} not registered: {e}");
+    for keys in apply_hotkeys(app, shortcuts) {
+        eprintln!("hotkey {keys} not registered");
+    }
+}
+
+/// Registers the switched-on shortcuts. Returns the keys that could not be registered,
+/// usually because another app already holds them.
+fn apply_hotkeys(app: &AppHandle, shortcuts: &settings::Shortcuts) -> Vec<String> {
+    let gs = app.global_shortcut();
+    let _ = gs.unregister_all();
+    let (mut active, mut failed) = (Vec::new(), Vec::new());
+    for (id, h) in shortcuts.all() {
+        if !h.on {
+            continue;
+        }
+        match h.keys.parse::<Shortcut>() {
+            Ok(sc) if gs.register(sc).is_ok() => active.push((sc, id)),
+            _ => failed.push(h.keys.clone()),
         }
     }
+    *ACTIVE.lock().unwrap() = active;
+    failed
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -543,7 +646,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| handle_args(app, &args, true)))
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_notification::init())
-        .invoke_handler(tauri::generate_handler![get_break, end_break, get_settings, save_settings, get_status, do_action, check_updates, install_update, set_background_image, get_background_image, set_side_picture])
+        .invoke_handler(tauri::generate_handler![take_welcome, get_strings, suspend_hotkeys, resume_hotkeys, get_break, end_break, get_settings, save_settings, get_status, do_action, check_updates, install_update, set_background_image, get_background_image, set_side_picture])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 if window.label().starts_with("break-") {
@@ -561,7 +664,11 @@ pub fn run() {
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             migrate_old_data(&dir);
+            let first_run = !dir.join("settings.json").exists();
             let mut settings = Settings::load(&dir.join("settings.json"));
+            if first_run {
+                let _ = settings.save(&dir.join("settings.json"));
+            }
             let choice = dir.join("autostart-choice");
             if let Ok(c) = std::fs::read_to_string(&choice) {
                 settings.start_at_login = c.trim() == "on";
@@ -575,25 +682,36 @@ pub fn run() {
                     settings: settings.clone(),
                     rotation: Rotation::new(seed),
                     current: None,
+                    in_call: false,
                 }),
                 tray: Mutex::new(None),
                 update: Mutex::new(UpdateState::load(&dir.join("update.json"))),
                 dir,
             });
             let ah = app.handle().clone();
-            let items = build_tray(&ah)?;
+            let items = build_tray(&ah, &settings)?;
             *app.state::<AppState>().tray.lock().unwrap() = Some(items);
             apply_autostart(&ah, settings.start_at_login);
-            register_hotkeys(&ah);
+            register_hotkeys(&ah, &settings.shortcuts);
             update::register(&ah);
             let args: Vec<String> = std::env::args().collect();
             handle_args(&ah, &args, false);
+            if first_run {
+                let ah2 = ah.clone();
+                WELCOME.store(true, std::sync::atomic::Ordering::Relaxed);
+                std::thread::spawn(move || open_settings(&ah2));
+            }
             std::thread::spawn(move || loop {
                 std::thread::sleep(Duration::from_secs(1));
                 let state = ah.state::<AppState>();
                 let (events, auto) = {
                     let mut inner = state.inner.lock().unwrap();
-                    (inner.sched.tick_busy(now(), idle::idle_seconds(), idle::screen_busy()), inner.settings.auto_update)
+                    let t = now();
+                    // Only look for a call when a break is close: the check reads the registry.
+                    let near = inner.sched.seconds_to_next(t).is_some_and(|(_, secs)| secs <= 60.0);
+                    inner.in_call = near && inner.settings.pause_in_calls && meeting::in_call();
+                    let busy = inner.in_call || idle::screen_busy();
+                    (inner.sched.tick_busy(t, idle::idle_seconds(), busy), inner.settings.auto_update)
                 };
                 handle(&ah, events);
                 if auto && state.update.lock().unwrap().due(now()) {
@@ -621,5 +739,22 @@ mod tests {
         let local = at.to_zoned_datetime(jiff::tz::TimeZone::system());
         assert_eq!((local.hour(), local.minute()), (7, 0));
         assert_eq!(local.date(), jiff::ZonedDateTime::now().date().tomorrow().unwrap());
+    }
+
+    #[test]
+    fn status_says_when_a_call_holds_the_break() {
+        let settings = super::Settings { language: "en".into(), ..super::Settings::default() };
+        let mut inner = super::Inner {
+            sched: super::Scheduler::new(settings.timing(), 0.0),
+            settings,
+            rotation: super::Rotation::new(1),
+            current: None,
+            in_call: false,
+        };
+        assert_eq!(super::status_text(&inner, 0.0).0, "Next: short break in 20 min");
+        inner.in_call = true;
+        assert_eq!(super::status_text(&inner, 0.0).0, "In a call: the break waits until it ends");
+        inner.settings.language = "fr".into();
+        assert_eq!(super::status_text(&inner, 0.0).0, "En appel : la pause attend la fin");
     }
 }

@@ -18,11 +18,11 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn label(&self) -> &'static str {
+    pub fn label_key(&self) -> &'static str {
         match (self.kind, self.eyes) {
-            (Kind::Mini, true) => "Eye break",
-            (Kind::Mini, false) => "Short break",
-            (Kind::Long, _) => "Movement break",
+            (Kind::Mini, true) => "kind.eye",
+            (Kind::Mini, false) => "kind.short",
+            (Kind::Long, _) => "kind.long",
         }
     }
 }
@@ -85,10 +85,10 @@ mod tests {
             }
         }
         for id in ["far-look", "blink", "window"] {
-            assert_eq!(items.iter().find(|i| i.id == id).unwrap().label(), "Eye break", "{id}");
+            assert_eq!(items.iter().find(|i| i.id == id).unwrap().label_key(), "kind.eye", "{id}");
         }
         for id in ["hands", "shoulders", "neck", "posture", "breaths"] {
-            assert_eq!(items.iter().find(|i| i.id == id).unwrap().label(), "Short break", "{id}");
+            assert_eq!(items.iter().find(|i| i.id == id).unwrap().label_key(), "kind.short", "{id}");
         }
         let mut ids: Vec<_> = items.iter().map(|i| &i.id).collect();
         ids.sort();
