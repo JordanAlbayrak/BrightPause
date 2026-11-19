@@ -1,4 +1,3 @@
-import { play } from './sound.js';
 import { COLORS, paint, loadImage } from './backgrounds.js';
 import { t, lang, languages, loadStrings } from './i18n.js';
 
@@ -246,9 +245,11 @@ function renderUpdate(u) {
     none: t('update.latest', { when: when(u.checked_at) }),
     error: t('update.error', { msg: u.message }),
     unconfigured: t('update.unconfigured'),
+    store: t('update.store'),
   }[u.state] || (u.checked_at ? t('update.last', { when: when(u.checked_at) }) : t('update.offline'));
   $('update-status').textContent = text;
   $('check-updates').disabled = u.state === 'checking' || u.state === 'installing';
+  $('check-updates').hidden = $('auto-update-line').hidden = u.state === 'store';
   if (u.state === 'checking' || u.state === 'installing') setTimeout(refresh, 800);
 }
 
@@ -315,12 +316,12 @@ async function main() {
       settings[el.name] = el.name === 'long_every_nth' ? Number(el.value) : el.value;
       render();
       save();
-      if (el.name === 'sound') play(settings.sound, settings.volume);
+      if (el.name === 'sound') invoke('play_sound', { name: settings.sound, volume: settings.volume });
     });
   }
   const vol = document.querySelector('input[data-key="volume"]');
-  vol.addEventListener('change', () => { settings.volume = Number(vol.value); save(); play(settings.sound, settings.volume); });
-  $('test-sound').addEventListener('click', () => play(settings.sound, settings.volume));
+  vol.addEventListener('change', () => { settings.volume = Number(vol.value); save(); invoke('play_sound', { name: settings.sound, volume: settings.volume }); });
+  $('test-sound').addEventListener('click', () => invoke('play_sound', { name: settings.sound, volume: settings.volume }));
   for (const el of document.querySelectorAll('[data-action]')) {
     el.addEventListener('click', async () => { await invoke('do_action', { id: el.dataset.action }); refresh(); });
   }

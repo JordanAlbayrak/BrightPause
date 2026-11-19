@@ -1,4 +1,3 @@
-import { play } from './sound.js';
 import { paint, wantsDark, loadImage, bytesToBase64 } from './backgrounds.js';
 import { t, loadStrings } from './i18n.js';
 
@@ -90,8 +89,6 @@ async function main() {
   tick();
   requestAnimationFrame(() => bar.classList.add('ready'));
   setInterval(tick, 250);
-
-  if (location.hash !== '#quiet') play(info.sound, info.volume);
 }
 
 main().catch((e) => console.error(e));

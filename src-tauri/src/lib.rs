@@ -5,6 +5,7 @@ mod meeting;
 mod idle;
 mod schedule;
 mod settings;
+mod sound;
 mod stats;
 mod update;
 
@@ -16,6 +17,7 @@ use serde::Serialize;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder, Wry};
+#[cfg(not(feature = "store"))]
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri_plugin_notification::NotificationExt;
@@ -50,8 +52,6 @@ struct BreakInfo {
     item: Item,
     can_postpone: bool,
     can_skip: bool,
-    sound: String,
-    volume: f32,
     theme: String,
     background: String,
     lang: String,
@@ -107,7 +107,7 @@ fn handle(app: &AppHandle, events: Vec<Event>) {
                 }
             }
             Event::BreakStarted { kind, length, can_postpone } => {
-                let all_screens = {
+                let (all_screens, sound_name, volume) = {
                     let mut inner = state.inner.lock().unwrap();
                     let item = inner.rotation.pick(kind);
                     let s = inner.settings.clone();
@@ -120,15 +120,14 @@ fn handle(app: &AppHandle, events: Vec<Event>) {
                         item: i18n::tip(lang, &item),
                         can_postpone,
                         can_skip: !s.strict,
-                        sound: s.sound.clone(),
-                        volume: s.volume,
                         theme: s.theme.clone(),
                         background: s.background.clone(),
                         lang: lang.into(),
                     });
-                    s.all_screens
+                    (s.all_screens, s.sound, s.volume)
                 };
                 open_break_windows(app, all_screens);
+                sound::play(&sound_name, volume);
             }
             Event::BreakEnded { kind, outcome } => {
                 state.inner.lock().unwrap().current = None;
@@ -163,6 +162,7 @@ fn open_break_windows(app: &AppHandle, all_screens: bool) {
         .title("BrightPause break")
         .additional_browser_args(BROWSER_ARGS)
         .decorations(false)
+        .shadow(false)
         .always_on_top(true)
         .skip_taskbar(true)
         .resizable(false)
@@ -332,8 +332,28 @@ fn apply_autostart(app: &AppHandle, on: bool) {
     if !installed() {
         return;
     }
-    let auto = app.autolaunch();
-    let _ = if on { auto.enable() } else { auto.disable() };
+    #[cfg(feature = "store")]
+    {
+        let _ = app;
+        store_startup(on);
+    }
+    #[cfg(not(feature = "store"))]
+    {
+        let auto = app.autolaunch();
+        let _ = if on { auto.enable() } else { auto.disable() };
+    }
+}
+
+// A packaged app may not use the Run key; the package declares a startup task instead
+// (TaskId in tools/msix/AppxManifest.xml). Windows refuses to enable it once the user has
+// switched it off in Task Manager or Settings.
+#[cfg(feature = "store")]
+fn store_startup(on: bool) {
+    use windows::ApplicationModel::StartupTask;
+    let task = StartupTask::GetAsync(&windows::core::HSTRING::from("BrightPauseStartup")).and_then(|op| op.join());
+    if let Ok(task) = task {
+        let _ = if on { task.RequestEnableAsync().and_then(|op| op.join()).map(|_| ()) } else { task.Disable() };
+    }
 }
 
 // Same arguments for every window, as WebView2 shares one environment. They switch off the
@@ -453,6 +473,11 @@ async fn end_break(app: AppHandle, outcome: String) -> Result<(), String> {
 #[tauri::command]
 fn get_strings(state: tauri::State<AppState>) -> i18n::Strings {
     i18n::strings(lang_of(&state.inner.lock().unwrap().settings))
+}
+
+#[tauri::command]
+fn play_sound(name: String, volume: f32) {
+    sound::play(&name, volume);
 }
 
 // Set on the first run after install: the settings page then opens with a short welcome.
@@ -646,7 +671,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| handle_args(app, &args, true)))
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_notification::init())
-        .invoke_handler(tauri::generate_handler![take_welcome, get_strings, suspend_hotkeys, resume_hotkeys, get_break, end_break, get_settings, save_settings, get_status, do_action, check_updates, install_update, set_background_image, get_background_image, set_side_picture])
+        .invoke_handler(tauri::generate_handler![take_welcome, play_sound, get_strings, suspend_hotkeys, resume_hotkeys, get_break, end_break, get_settings, save_settings, get_status, do_action, check_updates, install_update, set_background_image, get_background_image, set_side_picture])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 if window.label().starts_with("break-") {

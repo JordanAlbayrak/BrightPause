@@ -4,7 +4,8 @@ param(
   [Parameter(Mandatory)][string]$Exe,
   [Parameter(Mandatory)][string]$DataDir,
   [string[]]$Languages = @('en', 'fr', 'es', 'de'),
-  [string]$Out = "$PSScriptRoot\..\docs\local-shots"
+  [string]$Out = "$PSScriptRoot\..\docs\local-shots",
+  [int]$MaxWidth = 1600
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing, UIAutomationClient, UIAutomationTypes
@@ -41,12 +42,12 @@ function Save-Shot([string]$Name, [System.Drawing.Rectangle]$R, [switch]$Window)
       }
     } }
   }
-  if ($R.Width -gt 1600) {
-    $h = [int]($R.Height * 1600 / $R.Width)
-    $small = New-Object System.Drawing.Bitmap 1600, $h
+  if ($R.Width -gt $MaxWidth) {
+    $h = [int]($R.Height * $MaxWidth / $R.Width)
+    $small = New-Object System.Drawing.Bitmap $MaxWidth, $h
     $g = [System.Drawing.Graphics]::FromImage($small)
     $g.InterpolationMode = 'HighQualityBicubic'
-    $g.DrawImage($bmp, 0, 0, 1600, $h)
+    $g.DrawImage($bmp, 0, 0, $MaxWidth, $h)
     $g.Dispose(); $bmp.Dispose(); $bmp = $small
   }
   $bmp.Save((Join-Path $Out $Name), [System.Drawing.Imaging.ImageFormat]::Png)
@@ -66,11 +67,10 @@ function Set-Language([string]$Lang) {
   $s = if (Test-Path $path) { Get-Content $path -Raw | ConvertFrom-Json -AsHashtable } else { @{} }
   $s.language = $Lang
   $s.start_at_login = $false
-  $s | ConvertTo-Json | Set-Content $path
+  $s | ConvertTo-Json -Depth 5 | Set-Content $path
 }
 
 $primary = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
-$inset = New-Object System.Drawing.Rectangle ($primary.X + 8), ($primary.Y + 8), ($primary.Width - 16), ($primary.Height - 16)
 foreach ($lang in $Languages) {
   Set-Language $lang
   $p = Start-Process $Exe -PassThru
@@ -91,7 +91,7 @@ foreach ($lang in $Languages) {
   }
   & $Exe --break-now
   Start-Sleep 4
-  Save-Shot "lang-$lang-break.png" $inset
+  Save-Shot "lang-$lang-break.png" $primary
   & $Exe --skip
   Start-Sleep 1
   & $Exe --quit

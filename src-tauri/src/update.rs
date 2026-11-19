@@ -8,6 +8,9 @@ use tauri_plugin_updater::UpdaterExt;
 
 pub const DAY: f64 = 24.0 * 3600.0;
 
+// The Microsoft Store build never checks: the Store delivers its updates.
+pub const STORE: bool = cfg!(feature = "store");
+
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct UpdateState {
@@ -22,7 +25,8 @@ pub struct UpdateState {
 impl UpdateState {
     pub fn load(path: &Path) -> UpdateState {
         let saved: UpdateState = std::fs::read_to_string(path).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default();
-        UpdateState { state: "idle".into(), checked_at: saved.checked_at, ..UpdateState::default() }
+        let state = if STORE { "store" } else { "idle" };
+        UpdateState { state: state.into(), checked_at: saved.checked_at, ..UpdateState::default() }
     }
 
     pub fn save(&self, path: &Path) {
@@ -30,22 +34,28 @@ impl UpdateState {
     }
 
     pub fn due(&self, now: f64) -> bool {
-        self.state != "checking" && self.state != "installing" && self.state != "available" && now - self.checked_at >= DAY
+        !STORE && self.state != "checking" && self.state != "installing" && self.state != "available" && now - self.checked_at >= DAY
     }
 }
 
 pub fn configured(app: &AppHandle) -> bool {
-    app.config()
-        .plugins
-        .0
-        .get("updater")
-        .and_then(|u| u.get("pubkey"))
-        .and_then(|k| k.as_str())
-        .is_some_and(|k| !k.trim().is_empty())
+    !STORE
+        && app
+            .config()
+            .plugins
+            .0
+            .get("updater")
+            .and_then(|u| u.get("pubkey"))
+            .and_then(|k| k.as_str())
+            .is_some_and(|k| !k.trim().is_empty())
 }
 
 pub async fn check(app: &AppHandle, now: f64) -> UpdateState {
     let mut st = UpdateState { checked_at: now, ..UpdateState::default() };
+    if STORE {
+        st.state = "store".into();
+        return st;
+    }
     if !configured(app) {
         st.state = "unconfigured".into();
         st.message = "Updates are not set up in this build.".into();
@@ -73,6 +83,9 @@ pub async fn check(app: &AppHandle, now: f64) -> UpdateState {
 }
 
 pub async fn install(app: &AppHandle) -> Result<(), String> {
+    if STORE {
+        return Err("Updates come from the Microsoft Store.".into());
+    }
     let up = app.updater().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())?.ok_or("No update found.")?;
     up.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
     app.restart();
@@ -93,6 +106,14 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg(feature = "store")]
+    fn store_build_never_checks() {
+        assert!(!UpdateState::default().due(10.0 * DAY));
+        assert_eq!(UpdateState::load(Path::new("missing.json")).state, "store");
+    }
+
+    #[test]
+    #[cfg(not(feature = "store"))]
     fn checks_at_most_once_a_day_and_not_while_busy() {
         let mut s = UpdateState { state: "idle".into(), checked_at: 1000.0, ..UpdateState::default() };
         assert!(!s.due(1000.0 + DAY - 1.0));
