@@ -18,7 +18,7 @@ Settings and break history stay on your PC, in `%APPDATA%\io.github.jordanalbayr
 - Breaks on every screen, with a countdown, postpone (up to twice: 2 minutes for an eye break, 5 for a movement break) and skip. Strict mode removes both.
 - No break during a call: while another app records from your microphone (Teams, Zoom, a call in the browser), the break waits until the call ends. Checked on your PC only; it can be switched off. A call with only the camera on is not detected.
 - Pause from the tray in one click: 30 minutes, 1 hour, or until tomorrow.
-- Away from the keyboard for 5 minutes? That counts as a break, and the timer starts over. Breaks also wait while a game, a video or another app is full screen (on any screen), or while Do Not Disturb is on.
+- Away from the keyboard for 5 minutes? That counts as a break, and the timer starts over. Breaks also wait while a game, a video or another app is full screen (on any screen), or during a presentation.
 - Break screen: the light or dark theme, eight plain colours, or your own picture (dimmed so the text stays readable). The side screens match.
 - English, French, Spanish and German, following the Windows language unless you pick one.
 - Keyboard shortcuts you can change or switch off: Ctrl+Alt+B break now, Ctrl+Alt+P pause or resume, Ctrl+Alt+S skip. A week of stats.
