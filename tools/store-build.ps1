@@ -16,10 +16,10 @@ $root = Split-Path $PSScriptRoot
 $test = $Name -eq 'BrightPause.Test'
 if ($test -and -not $TauriConfig) { throw 'A test package needs -TauriConfig with a separate identifier, so it never shares data with an installed BrightPause.' }
 
-# MSIX versions are four numbers, the first not 0 and the last left at 0 for the Store:
-# 0.4.1 becomes 4.1.0.0, 1.2.3 becomes 102.3.0.0, so each release still sorts above the last.
+# MSIX versions are four numbers, the first not 0 and the last left at 0 for the Store: 1.2.3 becomes 1.2.3.0.
 $v = (Get-Content "$root\src-tauri\tauri.conf.json" -Raw | ConvertFrom-Json).version -split '\.' | ForEach-Object { [int]$_ }
-$version = "$($v[0] * 100 + $v[1]).$($v[2]).0.0"
+if ($v[0] -lt 1) { throw "The Store needs version 1.0.0 or later" }
+$version = "$($v[0]).$($v[1]).$($v[2]).0"
 
 $sdk = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe' | Sort-Object FullName | Select-Object -Last 1
 if (-not $sdk) { throw 'makeappx.exe not found: install the Windows 10/11 SDK.' }

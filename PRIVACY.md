@@ -8,6 +8,7 @@ BrightPause stores these files on your PC only:
 
 - `settings.json`: your choices (break times, sound, theme, language, shortcuts).
 - `history.jsonl`: one line per break with its time, kind and whether you took, postponed or skipped it. This feeds the "today" and week counts in settings.
+- `events.log`: one line each time a break starts, waits or ends, with the reason (for example a full-screen app, and that app's file name). It helps explain a missed or late break. It stays on your PC, and BrightPause keeps it under about 0.5 MB.
 - Your background picture, if you choose one.
 
 The version from this repository keeps them in `%APPDATA%\io.github.jordanalbayrak.brightpause\`. The Store version keeps them in its own folder under `%LOCALAPPDATA%\Packages\`, and uninstalling it deletes them. You can delete either folder at any time.
@@ -32,4 +33,4 @@ BrightPause collects no personal information from anyone, including children.
 
 Changes to this policy are made in this file, and its history shows every version. Questions: open an issue at https://github.com/JordanAlbayrak/BrightPause/issues.
 
-Last updated: 18 November 2026.
+Last updated: 19 November 2026.

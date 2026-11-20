@@ -1,5 +1,7 @@
 mod content;
 mod dim;
+mod eventlog;
+mod headsup;
 mod i18n;
 mod meeting;
 mod idle;
@@ -20,7 +22,6 @@ use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder, Wry}
 #[cfg(not(feature = "store"))]
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
-use tauri_plugin_notification::NotificationExt;
 
 use content::{Item, Rotation};
 use schedule::{Event, Kind, Outcome, Phase, Scheduler};
@@ -63,6 +64,8 @@ struct Inner {
     rotation: Rotation,
     current: Option<BreakInfo>,
     in_call: bool,
+    /// Why the screen counts as busy on the last tick, for the log.
+    busy: Option<String>,
 }
 
 struct TrayItems {
@@ -92,20 +95,57 @@ impl AppState {
     }
 }
 
+fn kind_name(kind: Kind) -> &'static str {
+    match kind {
+        Kind::Mini => "short break",
+        Kind::Long => "movement break",
+    }
+}
+
+// What is on screen when a break starts or waits: the reason Windows gives, and the foreground app.
+fn screen_context(busy: Option<&str>) -> String {
+    let state = idle::notification_state();
+    let fg = idle::foreground().map(|f| format!("{}{}", f.exe, if f.full_screen { ", full screen" } else { "" })).unwrap_or_else(|| "none".into());
+    format!("{}; Windows notification state {state}; foreground {fg}", busy.unwrap_or("screen free"))
+}
+
+fn log_event(app: &AppHandle, event: &Event) {
+    let state = app.state::<AppState>();
+    let (busy, heads_up, strict) = {
+        let inner = state.inner.lock().unwrap();
+        (inner.busy.clone(), inner.settings.heads_up, inner.settings.strict)
+    };
+    let text = match event {
+        Event::HeadsUp { kind, seconds } => {
+            let shown = if !heads_up { "off in settings" } else if strict { "shown, strict mode: no buttons" } else { "shown" };
+            format!("heads-up: {} in {seconds} s ({shown})", kind_name(*kind))
+        }
+        Event::Held { kind, seconds } => format!("{} held {seconds} s: {}", kind_name(*kind), screen_context(busy.as_deref())),
+        Event::BreakStarted { kind, length, .. } => format!("{} started ({length} s): {}", kind_name(*kind), screen_context(None)),
+        Event::BreakEnded { kind, outcome } => format!("{} ended: {outcome:?}", kind_name(*kind)).to_lowercase(),
+        Event::IdleReset => "away from the keyboard: timer restarted".into(),
+        Event::Paused { until: Some(_) } => "paused for a while".into(),
+        Event::Paused { until: None } => "paused".into(),
+        Event::Resumed => "resumed".into(),
+    };
+    eventlog::write(&state.dir, &text);
+}
+
 fn handle(app: &AppHandle, events: Vec<Event>) {
     let state = app.state::<AppState>();
     for event in events {
+        log_event(app, &event);
         match event {
             Event::HeadsUp { kind, seconds } => {
-                let (heads_up, lang) = {
+                let notice = {
                     let inner = state.inner.lock().unwrap();
-                    (inner.settings.heads_up, lang_of(&inner.settings))
+                    inner.settings.heads_up.then(|| heads_up_notice(&inner, kind, seconds))
                 };
-                if heads_up {
-                    let title = i18n::fmt(lang, "notify.title", &[("kind", &i18n::t(lang, kind_key(kind))), ("n", &seconds.to_string())]);
-                    let _ = app.notification().builder().title(title).body(i18n::t(lang, "notify.body")).show();
+                if let Some(notice) = notice {
+                    let _ = app.run_on_main_thread(move || headsup::show(notice));
                 }
             }
+            Event::Held { .. } => {}
             Event::BreakStarted { kind, length, can_postpone } => {
                 let (all_screens, sound_name, volume) = {
                     let mut inner = state.inner.lock().unwrap();
@@ -137,7 +177,34 @@ fn handle(app: &AppHandle, events: Vec<Event>) {
             Event::IdleReset | Event::Paused { .. } | Event::Resumed => {}
         }
     }
+    close_stale_heads_up(app);
     update_tray(app);
+}
+
+fn heads_up_notice(inner: &Inner, kind: Kind, seconds: u32) -> headsup::Notice {
+    let s = &inner.settings;
+    let lang = lang_of(s);
+    let mut buttons = Vec::new();
+    if !s.strict {
+        if inner.sched.can_snooze() {
+            let minutes = (inner.sched.timing.postpone(kind) / 60.0).round() as u32;
+            buttons.push((headsup::Choice::Snooze, i18n::fmt(lang, "heads.snooze", &[("n", &minutes.to_string())])));
+        }
+        buttons.push((headsup::Choice::Skip, i18n::t(lang, "heads.skip")));
+    }
+    let dark = match s.theme.as_str() {
+        "dark" => true,
+        "light" => false,
+        _ => headsup::system_dark(),
+    };
+    headsup::Notice { title: i18n::fmt(lang, "notify.title", &[("kind", &i18n::t(lang, kind_key(kind)))]), body: i18n::t(lang, "notify.body"), seconds, buttons, dark }
+}
+
+// The warning goes once its break starts, is snoozed or skipped, or is held back by a call.
+fn close_stale_heads_up(app: &AppHandle) {
+    if headsup::is_open() && !app.state::<AppState>().inner.lock().unwrap().sched.in_heads_up(now()) {
+        let _ = app.run_on_main_thread(headsup::close);
+    }
 }
 
 // Source links (target=_blank) go to the default browser, never to a webview popup.
@@ -291,6 +358,16 @@ fn act(app: &AppHandle, id: &str) {
             "pause-forever" => inner.sched.pause(t, None),
             "resume" => inner.sched.resume(t),
             "skip" | "postpone" if inner.current.as_ref().is_some_and(|c| !c.can_skip) => vec![],
+            "heads-skip" | "heads-snooze" | "skip" if inner.settings.strict && !matches!(inner.sched.phase, Phase::Break { .. }) => vec![],
+            "heads-skip" => {
+                eventlog::write(&state.dir, "Skip pressed on the heads-up");
+                inner.sched.skip_upcoming(t)
+            }
+            "heads-snooze" => {
+                eventlog::write(&state.dir, "Snooze pressed on the heads-up");
+                inner.sched.snooze(t)
+            }
+            "skip" if inner.sched.in_heads_up(t) => inner.sched.skip_upcoming(t),
             "skip" => inner.sched.end_break(t, Outcome::Skipped),
             "postpone" => inner.sched.end_break(t, Outcome::Postponed),
             "pause-toggle" if matches!(inner.sched.phase, Phase::Paused { .. }) => inner.sched.resume(t),
@@ -670,7 +747,6 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| handle_args(app, &args, true)))
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
-        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![take_welcome, play_sound, get_strings, suspend_hotkeys, resume_hotkeys, get_break, end_break, get_settings, save_settings, get_status, do_action, check_updates, install_update, set_background_image, get_background_image, set_side_picture])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -708,12 +784,24 @@ pub fn run() {
                     rotation: Rotation::new(seed),
                     current: None,
                     in_call: false,
+                    busy: None,
                 }),
                 tray: Mutex::new(None),
                 update: Mutex::new(UpdateState::load(&dir.join("update.json"))),
                 dir,
             });
             let ah = app.handle().clone();
+            let build = if cfg!(feature = "store") { "Store" } else { "installer" };
+            eventlog::write(&app.state::<AppState>().dir, &format!("BrightPause {} ({build} build) started; break every {} min", env!("CARGO_PKG_VERSION"), settings.mini_every_min));
+            let ah_choice = ah.clone();
+            headsup::on_choice(move |choice| {
+                let app = ah_choice.clone();
+                let id = match choice {
+                    headsup::Choice::Snooze => "heads-snooze",
+                    headsup::Choice::Skip => "heads-skip",
+                };
+                std::thread::spawn(move || act(&app, id));
+            });
             let items = build_tray(&ah, &settings)?;
             *app.state::<AppState>().tray.lock().unwrap() = Some(items);
             apply_autostart(&ah, settings.start_at_login);
@@ -735,7 +823,16 @@ pub fn run() {
                     // Only look for a call when a break is close: the check reads the registry.
                     let near = inner.sched.seconds_to_next(t).is_some_and(|(_, secs)| secs <= 60.0);
                     inner.in_call = near && inner.settings.pause_in_calls && meeting::in_call();
-                    let busy = inner.in_call || idle::screen_busy();
+                    inner.busy = if inner.in_call {
+                        Some("call (another app uses the microphone)".into())
+                    } else if let Some(reason) = idle::busy_reason(idle::notification_state()) {
+                        Some(reason.into())
+                    } else if near && idle::foreground().is_some_and(|f| f.full_screen) {
+                        Some("borderless full-screen window".into())
+                    } else {
+                        None
+                    };
+                    let busy = inner.busy.is_some();
                     (inner.sched.tick_busy(t, idle::idle_seconds(), busy), inner.settings.auto_update)
                 };
                 handle(&ah, events);
@@ -775,6 +872,7 @@ mod tests {
             rotation: super::Rotation::new(1),
             current: None,
             in_call: false,
+            busy: None,
         };
         assert_eq!(super::status_text(&inner, 0.0).0, "Next: short break in 20 min");
         inner.in_call = true;

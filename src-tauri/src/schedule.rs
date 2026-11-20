@@ -59,7 +59,7 @@ impl Timing {
             Kind::Long => self.heads_up_long,
         }
     }
-    fn postpone(&self, kind: Kind) -> f64 {
+    pub fn postpone(&self, kind: Kind) -> f64 {
         match kind {
             Kind::Mini => self.postpone_mini,
             Kind::Long => self.postpone_long,
@@ -77,6 +77,8 @@ pub enum Phase {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Event {
     HeadsUp { kind: Kind, seconds: u32 },
+    /// The break waits this long because the screen is busy or a call is on.
+    Held { kind: Kind, seconds: u32 },
     BreakStarted { kind: Kind, length: f64, can_postpone: bool },
     BreakEnded { kind: Kind, outcome: Outcome },
     IdleReset,
@@ -164,9 +166,11 @@ impl Scheduler {
                     }
                 }
                 if busy && due - now <= self.timing.heads_up(kind) {
+                    let wait = self.timing.heads_up(kind) + BUSY_RETRY;
                     if let Phase::Working { due, .. } = &mut self.phase {
-                        *due = now + self.timing.heads_up(kind) + BUSY_RETRY;
+                        *due = now + wait;
                     }
+                    events.push(Event::Held { kind, seconds: wait as u32 });
                     return events;
                 }
                 if now >= due {
@@ -206,6 +210,37 @@ impl Scheduler {
             }
         }
         vec![Event::BreakEnded { kind, outcome }]
+    }
+
+    /// True from the heads-up until the break starts.
+    pub fn in_heads_up(&self, now: f64) -> bool {
+        matches!(self.phase, Phase::Working { due, kind, heads_up_sent: true, .. } if due > now && due - now <= self.timing.heads_up(kind))
+    }
+
+    pub fn can_snooze(&self) -> bool {
+        matches!(self.phase, Phase::Working { postponed, .. } if postponed < self.timing.postpone_limit)
+    }
+
+    /// Snooze from the heads-up: the same delay as postponing the break, and it counts toward the limit.
+    pub fn snooze(&mut self, now: f64) -> Vec<Event> {
+        let Phase::Working { kind, postponed, .. } = self.phase else { return vec![] };
+        if !self.in_heads_up(now) || !self.can_snooze() {
+            return vec![];
+        }
+        let due = now + self.timing.postpone(kind);
+        self.phase = Phase::Working { since: now, due, kind, heads_up_sent: false, postponed: postponed + 1, idle: false };
+        vec![Event::BreakEnded { kind, outcome: Outcome::Postponed }]
+    }
+
+    /// Skip from the heads-up: this break only; the next one comes after the usual interval.
+    pub fn skip_upcoming(&mut self, now: f64) -> Vec<Event> {
+        let Phase::Working { kind, .. } = self.phase else { return vec![] };
+        if !self.in_heads_up(now) {
+            return vec![];
+        }
+        self.count(kind);
+        self.start_working(now, 0);
+        vec![Event::BreakEnded { kind, outcome: Outcome::Skipped }]
     }
 
     pub fn break_now(&mut self, now: f64) -> Vec<Event> {
@@ -421,6 +456,84 @@ mod tests {
         }
         assert_eq!(starts.len(), 1, "{starts:?}");
         assert!((1400..=1470).contains(&starts[0]), "{starts:?}");
+    }
+
+    #[test]
+    fn a_held_break_says_so_each_time_it_waits() {
+        let mut s = Scheduler::new(Timing::default(), 0.0);
+        run(&mut s, 0.0, 1189.0);
+        assert_eq!(s.tick_busy(1190.0, 0.0, true), vec![Event::Held { kind: Kind::Mini, seconds: 70 }]);
+        let mut held = 0;
+        for t in 1191..=1400 {
+            held += s.tick_busy(t as f64, 0.0, true).iter().filter(|e| matches!(e, Event::Held { .. })).count();
+        }
+        assert_eq!(held, 3);
+    }
+
+    #[test]
+    fn snooze_from_the_heads_up_delays_by_the_postpone_time_and_warns_again() {
+        let mut s = Scheduler::new(Timing { postpone_limit: 2, ..Timing::default() }, 0.0);
+        assert!(s.snooze(1185.0).is_empty(), "no snooze before the warning");
+        run(&mut s, 0.0, 1191.0);
+        assert!(s.in_heads_up(1191.0));
+        assert_eq!(s.snooze(1191.0), vec![Event::BreakEnded { kind: Kind::Mini, outcome: Outcome::Postponed }]);
+        assert!(!s.in_heads_up(1191.0));
+        assert_eq!(s.seconds_to_next(1191.0), Some((Kind::Mini, 120.0)));
+        let ev = run(&mut s, 1192.0, 1311.0);
+        assert_eq!(ev, vec![Event::HeadsUp { kind: Kind::Mini, seconds: 10 }, Event::BreakStarted { kind: Kind::Mini, length: 20.0, can_postpone: true }]);
+    }
+
+    #[test]
+    fn snoozes_count_toward_the_postpone_limit() {
+        let mut s = Scheduler::new(Timing { postpone_limit: 2, ..Timing::default() }, 0.0);
+        run(&mut s, 0.0, 1191.0);
+        assert!(!s.snooze(1191.0).is_empty());
+        run(&mut s, 1192.0, 1302.0);
+        assert!(!s.snooze(1302.0).is_empty());
+        run(&mut s, 1303.0, 1413.0);
+        assert!(s.in_heads_up(1413.0) && !s.can_snooze());
+        assert!(s.snooze(1413.0).is_empty());
+        let ev = run(&mut s, 1414.0, 1423.0);
+        assert_eq!(ev, vec![Event::BreakStarted { kind: Kind::Mini, length: 20.0, can_postpone: false }]);
+    }
+
+    #[test]
+    fn strict_mode_has_no_snooze() {
+        let mut s = Scheduler::new(Timing { postpone_limit: 0, ..Timing::default() }, 0.0);
+        run(&mut s, 0.0, 1191.0);
+        assert!(!s.can_snooze());
+        assert!(s.snooze(1191.0).is_empty());
+    }
+
+    #[test]
+    fn skip_from_the_heads_up_skips_this_break_only() {
+        let mut s = Scheduler::new(Timing::default(), 0.0);
+        assert!(s.skip_upcoming(100.0).is_empty(), "no skip before the warning");
+        run(&mut s, 0.0, 1195.0);
+        assert_eq!(s.skip_upcoming(1195.0), vec![Event::BreakEnded { kind: Kind::Mini, outcome: Outcome::Skipped }]);
+        assert_eq!(s.seconds_to_next(1195.0), Some((Kind::Mini, 1200.0)));
+        assert!(started(&run(&mut s, 1196.0, 2394.0)).is_empty());
+        assert_eq!(started(&s.tick(2395.0, 0.0)), vec![Kind::Mini]);
+    }
+
+    #[test]
+    fn a_skipped_break_still_counts_toward_the_movement_break() {
+        let mut s = Scheduler::new(Timing::default(), 0.0);
+        run(&mut s, 0.0, 1195.0);
+        s.skip_upcoming(1195.0);
+        run(&mut s, 1196.0, 2395.0);
+        s.end_break(2396.0, Outcome::Taken);
+        assert_eq!(s.next_kind(), Kind::Long);
+    }
+
+    #[test]
+    fn the_heads_up_window_ends_when_a_call_defers_the_break() {
+        let mut s = Scheduler::new(Timing::default(), 0.0);
+        run(&mut s, 0.0, 1191.0);
+        assert!(s.in_heads_up(1192.0));
+        s.tick_busy(1192.0, 0.0, true);
+        assert!(!s.in_heads_up(1192.0));
+        assert!(s.skip_upcoming(1192.0).is_empty());
     }
 
     #[test]
