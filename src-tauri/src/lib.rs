@@ -149,8 +149,14 @@ fn handle(app: &AppHandle, events: Vec<Event>) {
             Event::BreakStarted { kind, length, can_postpone } => {
                 let (all_screens, sound_name, volume) = {
                     let mut inner = state.inner.lock().unwrap();
-                    let item = inner.rotation.pick(kind);
                     let s = inner.settings.clone();
+                    let own = match kind {
+                        Kind::Mini => &s.my_texts.short,
+                        Kind::Long => &s.my_texts.long,
+                    };
+                    let item = inner.rotation.pick(kind, own, s.my_texts.only_mine);
+                    let shown = if item.id.starts_with("own:") { "one of your own texts".to_string() } else { format!("built-in \"{}\"", item.id) };
+                    eventlog::write(&state.dir, &format!("break shows {shown}"));
                     let lang = lang_of(&s);
                     inner.current = Some(BreakInfo {
                         kind,

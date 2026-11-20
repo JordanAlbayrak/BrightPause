@@ -46,6 +46,31 @@ function render() {
   applyTheme();
   cadence();
   renderHotkeys();
+  renderMine();
+}
+
+// Own break texts: one per line. A box being edited is left alone until it loses focus.
+function renderMine() {
+  const mine = settings.my_texts || { short: [], long: [], only_mine: false };
+  for (const kind of ['short', 'long']) {
+    const box = $('mine-' + kind);
+    if (document.activeElement !== box) box.value = mine[kind].join('\n');
+  }
+  $('mine-only').checked = mine.only_mine;
+}
+
+function bindMine() {
+  const lines = (box) => box.value.split('\n').map((s) => s.trim()).filter(Boolean);
+  const update = () => {
+    const short = lines($('mine-short')), long = lines($('mine-long'));
+    if ([...short, ...long].some((s) => [...s].length > 140)) return toast(t('mine.too_long', { n: 140 }), true);
+    if (short.length > 30 || long.length > 30) return toast(t('mine.too_many', { n: 30 }), true);
+    settings.my_texts = { short, long, only_mine: $('mine-only').checked };
+    save();
+  };
+  $('mine-short').addEventListener('change', update);
+  $('mine-long').addEventListener('change', update);
+  $('mine-only').addEventListener('change', update);
 }
 
 let recording = null;
@@ -299,6 +324,7 @@ async function main() {
   buildLanguages();
   buildSteppers();
   buildHotkeys();
+  bindMine();
   settings = await invoke('get_settings');
   render();
   requestAnimationFrame(() => document.body.classList.add('ready'));

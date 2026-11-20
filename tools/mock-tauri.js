@@ -9,7 +9,7 @@
     mini: { id: 'far-look', kind: 'mini', type: 'message', title: 'Look far away', text: 'Find something about 6 metres away and rest your eyes on it until the timer ends.', source_title: 'American Optometric Association', source_url: 'https://www.aoa.org/healthy-eyes/eye-and-vision-conditions/computer-vision-syndrome' },
     long: { id: 'squats', kind: 'long', type: 'challenge', title: 'Ten slow squats', text: 'Stand up and do ten slow squats or ten calf raises. Hold the desk if you like.', source_title: '', source_url: '' },
   };
-  const settings = { mini_every_min: 20, mini_length_sec: 20, long_every_nth: 3, long_length_min: 5, heads_up: true, strict, allow_postpone: true, idle_reset_min: 5, sound: 'chime', volume: 0.5, start_at_login: true, theme, all_screens: true, background: 'theme', auto_update: false, language: lang, pause_in_calls: true, shortcuts: { break_now: { keys: 'Ctrl+Alt+B', on: true }, pause: { keys: 'Ctrl+Alt+P', on: true }, skip: { keys: 'Ctrl+Alt+S', on: true } } };
+  const settings = { mini_every_min: 20, mini_length_sec: 20, long_every_nth: 3, long_length_min: 5, heads_up: true, strict, allow_postpone: true, idle_reset_min: 5, sound: 'chime', volume: 0.5, start_at_login: true, theme, all_screens: true, background: 'theme', auto_update: false, language: lang, pause_in_calls: true, shortcuts: { break_now: { keys: 'Ctrl+Alt+B', on: true }, pause: { keys: 'Ctrl+Alt+P', on: true }, skip: { keys: 'Ctrl+Alt+S', on: true } }, my_texts: { short: ['Refill your water glass', 'Look at something green'], long: ['Walk to the mailbox and back'], only_mine: false } };
   // Strings copied next to this file by tools/shots.ps1.
   const xhr = new XMLHttpRequest();
   xhr.open('GET', `i18n-${lang}.json`, false);

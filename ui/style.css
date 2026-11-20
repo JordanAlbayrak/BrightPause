@@ -192,3 +192,5 @@ input[type="range"] { accent-color: var(--accent); width: 9rem; }
 .hotkey { display: flex; align-items: center; gap: 10px; }
 .btn.keys { min-width: 140px; }
 .btn.keys.recording { border-color: var(--accent); color: var(--accent); }
+.card textarea { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 8px 10px; font: inherit; font-size: 0.95rem; line-height: 1.4; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; resize: vertical; }
+.card textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }

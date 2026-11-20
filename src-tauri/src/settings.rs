@@ -3,6 +3,38 @@ use std::path::Path;
 
 use crate::schedule::Timing;
 
+pub const MY_TEXT_CHARS: usize = 140;
+pub const MY_TEXTS_PER_KIND: usize = 30;
+
+/// The user's own break texts, shown alongside the built-in ones or instead of them.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct MyTexts {
+    pub short: Vec<String>,
+    pub long: Vec<String>,
+    pub only_mine: bool,
+}
+
+impl MyTexts {
+    pub fn validate(&self) -> Result<(), String> {
+        for list in [&self.short, &self.long] {
+            if list.len() > MY_TEXTS_PER_KIND {
+                return Err(format!("Up to {MY_TEXTS_PER_KIND} texts for each kind of break."));
+            }
+            for text in list {
+                if text.trim().is_empty() {
+                    return Err("A break text is empty.".into());
+                }
+                if text.chars().count() > MY_TEXT_CHARS {
+                    let start: String = text.chars().take(24).collect();
+                    return Err(format!("Keep each text to {MY_TEXT_CHARS} characters: \"{start}...\""));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Hotkey {
     pub keys: String,
@@ -73,6 +105,7 @@ pub struct Settings {
     pub language: String,
     pub pause_in_calls: bool,
     pub shortcuts: Shortcuts,
+    pub my_texts: MyTexts,
 }
 
 impl Default for Settings {
@@ -96,6 +129,7 @@ impl Default for Settings {
             language: "system".into(),
             pause_in_calls: true,
             shortcuts: Shortcuts::default(),
+            my_texts: MyTexts::default(),
         }
     }
 }
@@ -135,6 +169,7 @@ impl Settings {
             return Err("Unknown language.".into());
         }
         self.shortcuts.validate()?;
+        self.my_texts.validate()?;
         if !valid_background(&self.background) {
             return Err("Unknown background.".into());
         }
@@ -197,6 +232,18 @@ mod tests {
     fn strict_mode_forbids_postpone() {
         let s = Settings { strict: true, ..Settings::default() };
         assert_eq!(s.timing().postpone_limit, 0);
+    }
+
+    #[test]
+    fn own_texts_are_checked_and_old_files_get_none() {
+        let with = |short: Vec<&str>| Settings { my_texts: MyTexts { short: short.into_iter().map(String::from).collect(), ..MyTexts::default() }, ..Settings::default() };
+        assert!(with(vec!["Drink some water", "Stand up and stretch"]).validate().is_ok());
+        assert!(with(vec!["   "]).validate().is_err());
+        assert!(with(vec![&"é".repeat(140)]).validate().is_ok());
+        assert!(with(vec![&"é".repeat(141)]).validate().is_err());
+        assert!(with(vec!["x"; 31]).validate().is_err());
+        let old: Settings = serde_json::from_str(r#"{"mini_every_min": 25}"#).unwrap();
+        assert_eq!(old.my_texts, MyTexts::default());
     }
 
     #[test]

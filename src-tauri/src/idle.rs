@@ -14,6 +14,7 @@ pub fn idle_seconds() -> f64 {
 /// Why Windows would hold a notification now, from SHQueryUserNotificationState; None when it would not.
 pub fn busy_reason(state: i32) -> Option<&'static str> {
     match state {
+        1 => Some("screen locked or screen saver on"),
         2 => Some("full-screen app"),
         3 => Some("exclusive full-screen game (Direct3D)"),
         4 => Some("presentation mode"),
@@ -106,10 +107,10 @@ mod tests {
 
     #[test]
     fn full_screen_presentation_and_do_not_disturb_hold_breaks() {
-        for state in [2, 3, 4, 6] {
+        for state in [1, 2, 3, 4, 6] {
             assert!(busy_reason(state).is_some(), "{state}");
         }
-        for state in [0, 1, 5, 7] {
+        for state in [0, 5, 7] {
             assert!(busy_reason(state).is_none(), "{state}");
         }
     }

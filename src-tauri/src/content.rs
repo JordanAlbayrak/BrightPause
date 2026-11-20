@@ -49,18 +49,41 @@ impl Rotation {
         self.seed
     }
 
-    pub fn pick(&mut self, kind: Kind) -> Item {
-        let pool: Vec<&Item> = all().iter().filter(|i| i.kind == kind).collect();
+    /// The next item of this kind, from the built-in texts plus the user's own (or only the user's
+    /// own when `only_own` is on and there are some for this kind).
+    pub fn pick(&mut self, kind: Kind, own: &[String], only_own: bool) -> Item {
+        let own: Vec<Item> = own.iter().map(|t| own_item(kind, t)).collect();
+        let mut pool: Vec<Item> = if only_own && !own.is_empty() { Vec::new() } else { all().iter().filter(|i| i.kind == kind).cloned().collect() };
+        pool.extend(own);
         let keep = pool.len() / 2;
-        let fresh: Vec<&&Item> = pool.iter().filter(|i| !self.recent.contains(&i.id)).collect();
-        let item = (*fresh[(self.next_u64() % fresh.len() as u64) as usize]).clone();
+        let mut fresh: Vec<&Item> = pool.iter().filter(|i| !self.recent.contains(&i.id)).collect();
+        if fresh.is_empty() {
+            fresh = pool.iter().collect();
+        }
+        let item = fresh[(self.next_u64() % fresh.len() as u64) as usize].clone();
         self.recent.push(item.id.clone());
-        let mine: Vec<String> = self.recent.iter().filter(|id| pool.iter().any(|i| &i.id == *id)).cloned().collect();
-        if mine.len() > keep {
-            let drop = mine[0].clone();
-            self.recent.retain(|id| *id != drop);
+        loop {
+            let seen: Vec<String> = self.recent.iter().filter(|id| pool.iter().any(|i| &i.id == *id)).cloned().collect();
+            if seen.len() <= keep {
+                break;
+            }
+            self.recent.retain(|id| *id != seen[0]);
         }
         item
+    }
+}
+
+fn own_item(kind: Kind, text: &str) -> Item {
+    let text = text.trim();
+    Item {
+        id: format!("own:{text}"),
+        kind,
+        kind_of_item: "message".into(),
+        title: text.into(),
+        text: String::new(),
+        source_title: String::new(),
+        source_url: String::new(),
+        eyes: false,
     }
 }
 
@@ -100,7 +123,7 @@ mod tests {
     fn rotation_never_repeats_within_half_the_pool() {
         let mut r = Rotation::new(42);
         let n = all().iter().filter(|i| i.kind == Kind::Mini).count();
-        let picks: Vec<String> = (0..n * 6).map(|_| r.pick(Kind::Mini).id).collect();
+        let picks: Vec<String> = (0..n * 6).map(|_| r.pick(Kind::Mini, &[], false).id).collect();
         for w in picks.windows(n / 2) {
             let mut v = w.to_vec();
             v.sort();
@@ -108,6 +131,41 @@ mod tests {
             assert_eq!(v.len(), w.len(), "{w:?}");
         }
         assert!(all().iter().filter(|i| i.kind == Kind::Mini).all(|i| picks.contains(&i.id)));
-        assert_eq!(r.pick(Kind::Long).kind, Kind::Long);
+        assert_eq!(r.pick(Kind::Long, &[], false).kind, Kind::Long);
+    }
+
+    #[test]
+    fn own_texts_join_the_rotation_for_their_kind() {
+        let mut r = Rotation::new(7);
+        let own = vec!["Drink some water".to_string(), "  Look at the plant  ".to_string()];
+        let n = all().iter().filter(|i| i.kind == Kind::Mini).count() + own.len();
+        let picks: Vec<Item> = (0..n * 4).map(|_| r.pick(Kind::Mini, &own, false)).collect();
+        assert!(picks.iter().any(|i| i.title == "Drink some water" && i.text.is_empty()));
+        assert!(picks.iter().any(|i| i.title == "Look at the plant"));
+        assert!(picks.iter().any(|i| !i.id.starts_with("own:")));
+        assert!(picks.iter().all(|i| i.kind == Kind::Mini));
+    }
+
+    #[test]
+    fn only_mine_shows_just_the_own_texts_and_falls_back_when_there_are_none() {
+        let mut r = Rotation::new(9);
+        let own = vec!["Refill the water".to_string(), "Walk to the window".to_string(), "Ten squats".to_string()];
+        for _ in 0..20 {
+            assert!(r.pick(Kind::Long, &own, true).id.starts_with("own:"));
+        }
+        assert!(!r.pick(Kind::Mini, &[], true).id.starts_with("own:"));
+    }
+
+    #[test]
+    fn switching_to_a_smaller_pool_never_runs_dry() {
+        let mut r = Rotation::new(3);
+        let own: Vec<String> = (0..10).map(|i| format!("text {i}")).collect();
+        for _ in 0..30 {
+            r.pick(Kind::Mini, &own, true);
+        }
+        let one = vec!["text 1".to_string()];
+        for _ in 0..5 {
+            assert_eq!(r.pick(Kind::Mini, &one, true).title, "text 1");
+        }
     }
 }

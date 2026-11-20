@@ -20,6 +20,7 @@ Settings and break history stay on your PC, in `%APPDATA%\io.github.jordanalbayr
 - Pause from the tray in one click: 30 minutes, 1 hour, or until tomorrow.
 - Away from the keyboard for 5 minutes? That counts as a break, and the timer starts over. Breaks also wait while a game, a video or another app is full screen (on any screen), or while Do Not Disturb is on.
 - Break screen: the light or dark theme, eight plain colours, or your own picture (dimmed so the text stays readable). The side screens match.
+- Your own break texts, one per line for short and movement breaks, mixed with the built-in ones or shown alone.
 - English, French, Spanish and German, following the Windows language unless you pick one.
 - Keyboard shortcuts you can change or switch off: Ctrl+Alt+B break now, Ctrl+Alt+P pause or resume, Ctrl+Alt+S skip. A week of stats.
 - The first start after installing opens the settings with a short welcome.
