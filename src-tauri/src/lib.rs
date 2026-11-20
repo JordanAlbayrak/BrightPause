@@ -835,6 +835,8 @@ pub fn run() {
                         Some(reason.into())
                     } else if near && idle::foreground().is_some_and(|f| f.full_screen) {
                         Some("borderless full-screen window".into())
+                    } else if near && idle::focus_session() {
+                        Some("Focus session".into())
                     } else {
                         None
                     };

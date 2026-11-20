@@ -12,15 +12,29 @@ pub fn idle_seconds() -> f64 {
 }
 
 /// Why Windows would hold a notification now, from SHQueryUserNotificationState; None when it would not.
+/// This state does not include Focus or Do Not Disturb: see focus_session.
 pub fn busy_reason(state: i32) -> Option<&'static str> {
     match state {
         1 => Some("screen locked or screen saver on"),
         2 => Some("full-screen app"),
         3 => Some("exclusive full-screen game (Direct3D)"),
         4 => Some("presentation mode"),
-        6 => Some("Do Not Disturb"),
+        6 => Some("quiet time after a Windows install or upgrade"),
         _ => None,
     }
+}
+
+/// True while a Windows 11 Focus session runs; Windows turns on Do Not Disturb with it. Do Not
+/// Disturb switched on by itself has no documented API, so it is not detected.
+#[cfg(windows)]
+pub fn focus_session() -> bool {
+    use windows::UI::Shell::FocusSessionManager;
+    FocusSessionManager::IsSupported().unwrap_or(false) && FocusSessionManager::GetDefault().and_then(|m| m.IsFocusActive()).unwrap_or(false)
+}
+
+#[cfg(not(windows))]
+pub fn focus_session() -> bool {
+    false
 }
 
 #[cfg(windows)]
@@ -124,5 +138,12 @@ mod tests {
         assert!(!fills_screen((-8, -8, 2568, 1448), (0, 0, 2560, 1440), true, "Chrome_WidgetWin_1"), "maximized");
         assert!(!fills_screen((0, 0, 2560, 1440), (0, 0, 2560, 1440), false, "Progman"), "desktop");
         assert!(!fills_screen((0, 0, 2560, 1440), (0, 0, 2560, 1440), false, "WorkerW"), "desktop");
+    }
+
+    #[test]
+    #[ignore = "reads the live Focus state"]
+    fn live_focus_session() {
+        #[cfg(windows)]
+        println!("supported {:?}, focus {}", windows::UI::Shell::FocusSessionManager::IsSupported(), super::focus_session());
     }
 }
